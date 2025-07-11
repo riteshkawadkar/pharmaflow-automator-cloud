@@ -6,7 +6,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator 
 } from "@/components/ui/dropdown-menu";
-import { File, Pill, Cog, Microscope } from "lucide-react";
+import { FileText, Pill, Cog, Microscope } from "lucide-react";
 import { drugApprovalWorkflowTemplate, manufacturingChangeWorkflowTemplate } from "@/data/sampleWorkflowTemplate";
 
 interface TemplateSelectorProps {
@@ -33,7 +33,7 @@ export const TemplateSelector = ({ onLoadTemplate }: TemplateSelectorProps) => {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size="sm">
-          <File className="w-4 h-4 mr-1" />
+          <FileText className="w-4 h-4 mr-1" />
           Templates
         </Button>
       </DropdownMenuTrigger>
