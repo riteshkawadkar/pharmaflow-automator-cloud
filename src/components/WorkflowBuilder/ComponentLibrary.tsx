@@ -398,11 +398,11 @@ const componentLibrary: ComponentLibraryItem[] = [
 ];
 
 interface ComponentLibraryProps {
-  onComponentDrag?: (component: ComponentLibraryItem) => void;
+  onDragStart: (event: React.DragEvent, componentId: string) => void;
 }
 
 export const ComponentLibrary: React.FC<ComponentLibraryProps> = ({
-  onComponentDrag
+  onDragStart
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<ComponentCategory | 'all'>('all');
@@ -438,12 +438,10 @@ export const ComponentLibrary: React.FC<ComponentLibraryProps> = ({
   }, {} as Record<ComponentCategory, ComponentLibraryItem[]>);
 
   const handleDragStart = (e: React.DragEvent, component: ComponentLibraryItem) => {
-    e.dataTransfer.setData('application/json', JSON.stringify(component));
-    e.dataTransfer.effectAllowed = 'copy';
+    e.dataTransfer.setData('application/reactflow', component.id);
+    e.dataTransfer.effectAllowed = 'move';
     
-    if (onComponentDrag) {
-      onComponentDrag(component);
-    }
+    onDragStart(e, component.id);
   };
 
   const renderComponent = (component: ComponentLibraryItem) => {

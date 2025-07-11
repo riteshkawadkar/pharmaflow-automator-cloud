@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Layout } from '../components/Layout/Layout';
 import { Canvas } from '../components/WorkflowBuilder/Canvas';
-import { ComponentLibrary } from '../components/workflow-builder/ComponentLibrary';
+import { ComponentLibrary } from '../components/WorkflowBuilder/ComponentLibrary';
 import { PropertiesPanel } from '../components/workflow-builder/NodePropertiesPanel';
 import { ValidationEngine } from '../components/WorkflowBuilder/ValidationEngine';
 import { TemplateLibrary } from '../components/WorkflowBuilder/TemplateLibrary';
