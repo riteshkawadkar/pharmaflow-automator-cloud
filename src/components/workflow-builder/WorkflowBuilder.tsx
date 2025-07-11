@@ -18,6 +18,7 @@ import '@xyflow/react/dist/style.css';
 import { WorkflowNode } from './WorkflowNode';
 import { NodePalette } from './NodePalette';
 import { WorkflowBuilderToolbar } from './WorkflowBuilderToolbar';
+import { NodePropertiesPanel } from './NodePropertiesPanel';
 import { WorkflowStepType, WorkflowDefinition } from '@/types/workflow-builder';
 import { WorkflowType } from '@/types/workflows';
 import { supabase } from '@/integrations/supabase/client';
@@ -58,6 +59,7 @@ export const WorkflowBuilder = ({ workflowDefinition, onBack }: WorkflowBuilderP
   
   const [isSaving, setIsSaving] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [selectedNode, setSelectedNode] = useState<Node | null>(null);
 
   const onConnect = useCallback(
     (params: Edge | Connection) => setEdges((eds) => addEdge(params, eds)),
@@ -97,6 +99,7 @@ export const WorkflowBuilder = ({ workflowDefinition, onBack }: WorkflowBuilderP
           label: getStepLabel(stepType),
           stepType,
           description: getStepDescription(stepType),
+          configuration: {},
         },
       };
 
@@ -278,6 +281,38 @@ export const WorkflowBuilder = ({ workflowDefinition, onBack }: WorkflowBuilderP
     event.target.value = ''; // Reset file input
   };
 
+  const loadTemplate = (templateData: any) => {
+    setWorkflowName(templateData.name);
+    setWorkflowDescription(templateData.description || '');
+    setWorkflowType(templateData.workflow_type);
+    
+    if (templateData.flow_data) {
+      setNodes(templateData.flow_data.nodes || []);
+      setEdges(templateData.flow_data.edges || []);
+      
+      if (templateData.flow_data.viewport && reactFlowInstance) {
+        reactFlowInstance.setViewport(templateData.flow_data.viewport);
+      }
+    }
+    
+    toast({
+      title: "Template Loaded",
+      description: "Workflow template has been successfully loaded",
+    });
+  };
+
+  const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
+    setSelectedNode(node);
+  }, []);
+
+  const updateNode = useCallback((nodeId: string, updates: Partial<Node>) => {
+    setNodes((nds) =>
+      nds.map((node) =>
+        node.id === nodeId ? { ...node, ...updates } : node
+      )
+    );
+  }, [setNodes]);
+
   return (
     <div className="h-screen bg-gradient-subtle">
       <div className="container mx-auto px-4 pt-4">
@@ -294,6 +329,7 @@ export const WorkflowBuilder = ({ workflowDefinition, onBack }: WorkflowBuilderP
           onBack={onBack}
           onExport={exportWorkflow}
           onImport={importWorkflow}
+          onLoadTemplate={loadTemplate}
           isSaving={isSaving}
           isPublishing={isPublishing}
         />
@@ -315,6 +351,7 @@ export const WorkflowBuilder = ({ workflowDefinition, onBack }: WorkflowBuilderP
               onInit={(instance) => setReactFlowInstance(instance)}
               onDrop={onDrop}
               onDragOver={onDragOver}
+              onNodeClick={onNodeClick}
               nodeTypes={nodeTypes}
               fitView
               attributionPosition="bottom-left"
@@ -334,6 +371,14 @@ export const WorkflowBuilder = ({ workflowDefinition, onBack }: WorkflowBuilderP
               <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
             </ReactFlow>
           </div>
+        </div>
+        
+        {/* Properties Panel */}
+        <div className="absolute top-4 right-4 z-10">
+          <NodePropertiesPanel
+            selectedNode={selectedNode}
+            onUpdateNode={updateNode}
+          />
         </div>
       </div>
     </div>

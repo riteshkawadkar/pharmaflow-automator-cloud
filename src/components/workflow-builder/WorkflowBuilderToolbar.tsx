@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Save, Play, ArrowLeft, Download, Upload } from "lucide-react";
 import { WorkflowType, WORKFLOW_CONFIGS } from "@/types/workflows";
+import { TemplateSelector } from "./TemplateSelector";
 
 interface WorkflowBuilderToolbarProps {
   workflowName: string;
@@ -19,6 +20,7 @@ interface WorkflowBuilderToolbarProps {
   onBack: () => void;
   onExport: () => void;
   onImport: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onLoadTemplate: (template: any) => void;
   isSaving?: boolean;
   isPublishing?: boolean;
 }
@@ -36,6 +38,7 @@ export const WorkflowBuilderToolbar = ({
   onBack,
   onExport,
   onImport,
+  onLoadTemplate,
   isSaving = false,
   isPublishing = false
 }: WorkflowBuilderToolbarProps) => {
@@ -124,7 +127,7 @@ export const WorkflowBuilderToolbar = ({
           </div>
         </div>
         
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Button variant="outline" size="sm" onClick={onExport}>
             <Download className="w-4 h-4 mr-1" />
             Export
@@ -141,6 +144,7 @@ export const WorkflowBuilderToolbar = ({
               />
             </label>
           </Button>
+          <TemplateSelector onLoadTemplate={onLoadTemplate} />
         </div>
       </CardContent>
     </Card>
