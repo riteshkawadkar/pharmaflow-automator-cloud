@@ -29,6 +29,8 @@ export const RequestPortal: React.FC<RequestPortalProps> = ({ onBack }) => {
   const navigate = useNavigate();
 
   const handleWorkflowSelect = (workflow: any) => {
+    console.log('🎯 Selected workflow:', workflow.name, 'ID:', workflow.id);
+    console.log('📝 Workflow flow_data:', workflow.flow_data);
     setSelectedWorkflow(workflow);
     setFormData({});
   };
@@ -174,6 +176,9 @@ export const RequestPortal: React.FC<RequestPortalProps> = ({ onBack }) => {
 
   // Active workflows only
   const activeWorkflows = workflowDefinitions.filter(w => w.status === 'active');
+  console.log('🔄 All workflows:', workflowDefinitions.length);
+  console.log('✅ Active workflows:', activeWorkflows.length);
+  console.log('📊 Workflow breakdown:', workflowDefinitions.map(w => ({ name: w.name, status: w.status })));
 
   return (
     <div className="space-y-6">

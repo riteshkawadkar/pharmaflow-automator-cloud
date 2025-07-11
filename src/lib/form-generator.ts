@@ -28,6 +28,9 @@ export interface GeneratedForm {
 
 export class WorkflowFormGenerator {
   static generateFormFromWorkflow(workflowDefinition: WorkflowDefinition): GeneratedForm {
+    console.log('🚀 Generating form for workflow:', workflowDefinition.name);
+    console.log('📋 Workflow nodes:', workflowDefinition.flow_data?.nodes?.length || 0);
+    
     const form: GeneratedForm = {
       title: `${workflowDefinition.name} Request`,
       description: workflowDefinition.description,
@@ -39,9 +42,13 @@ export class WorkflowFormGenerator {
       ['form_input', 'start'].includes(node.data?.stepType)
     );
 
+    console.log('🔍 Found form nodes:', formNodes.length);
+    
     formNodes.forEach((node, index) => {
+      console.log(`📝 Processing node ${index + 1}:`, node.data?.label, 'Type:', node.data?.stepType);
       const section = this.generateSectionFromNode(node, index);
       if (section) {
+        console.log('✅ Generated section:', section.title, 'with', section.fields.length, 'fields');
         form.sections.push(section);
       }
     });

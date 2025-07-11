@@ -1,5 +1,7 @@
 import { WorkflowDefinition } from '@/types/workflow-builder';
 
+console.log('Loading workflow templates...');
+
 export const drugApprovalWorkflowTemplate: WorkflowDefinition = {
   name: "Drug Approval Workflow - FDA Submission",
   description: "Complete pharmaceutical drug approval process from initial application to FDA approval decision",
