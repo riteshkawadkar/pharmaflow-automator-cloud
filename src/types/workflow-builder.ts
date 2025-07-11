@@ -67,7 +67,10 @@ export interface StepConfiguration {
     label: string;
     type: string;
     required: boolean;
-    options?: string[];
+    name?: string;
+    placeholder?: string;
+    options?: Array<{ value: string; label: string }>;
+    pharmaceuticalType?: string;
     validation?: {
       min?: number;
       max?: number;
@@ -76,9 +79,14 @@ export interface StepConfiguration {
     };
   }>;
   
+  // Form configuration
+  template?: string;
+  enableValidation?: boolean;
+  autoSave?: boolean;
+  allowAttachments?: boolean;
+  
   // Notification config
   recipients?: string[];
-  template?: string;
   notificationType?: 'email' | 'sms' | 'in_app' | 'all';
   
   // Decision config
@@ -134,6 +142,15 @@ export interface StepConfiguration {
   rootCauseAnalysis?: boolean;
   effectivenessCheck?: boolean;
   implementationPlan?: boolean;
+  
+  // Master Data Integration
+  productCode?: string;
+  
+  // Advanced settings
+  timeout?: number;
+  retryAttempts?: number;
+  errorHandling?: string;
+  logging?: boolean;
   
   // General
   timeLimit?: number;
