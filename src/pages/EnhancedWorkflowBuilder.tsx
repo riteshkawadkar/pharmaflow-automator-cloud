@@ -24,7 +24,8 @@ import {
 } from '@xyflow/react';
 import { WorkflowBuilderWrapper } from '@/components/workflow-builder/WorkflowBuilder';
 import { ComponentLibrary, ComponentLibraryItem, componentLibrary } from '@/components/workflow-builder/ComponentLibrary';
-import { WorkflowNode } from '@/components/workflow-builder/WorkflowNode';
+import { WorkflowNodeComponent } from '@/components/workflow-builder/WorkflowNodeComponent';
+import { ValidationEngine } from '@/components/workflow-builder/ValidationEngine';
 import { WorkflowStepType } from '@/types/workflow-builder';
 import { Play, Save, Share, Download, Upload, Settings, Users, FileCheck, Trash2, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
 
@@ -34,9 +35,12 @@ interface EnhancedWorkflowNode extends Node {
     label: string;
     stepType: WorkflowStepType;
     description?: string;
+    type?: string;
     pharmaceuticalType?: string;
     complianceRequirements?: ComplianceRequirement[];
     properties?: Record<string, any>;
+    gxpCritical?: boolean;
+    estimatedDuration?: number;
   };
   validation?: {
     isValid: boolean;
@@ -62,12 +66,13 @@ interface WorkflowTemplate {
 }
 
 const nodeTypes = {
-  workflowNode: WorkflowNode,
+  workflowNode: WorkflowNodeComponent,
 };
 
 // Debug: Log components to verify they're defined
-console.log('🔧 DEBUG: WorkflowNode component:', WorkflowNode);
+console.log('🔧 DEBUG: WorkflowNodeComponent component:', WorkflowNodeComponent);
 console.log('🔧 DEBUG: ComponentLibrary component:', ComponentLibrary);
+console.log('🔧 DEBUG: ValidationEngine component:', ValidationEngine);
 console.log('🔧 DEBUG: nodeTypes:', nodeTypes);
 
 // Mock templates
@@ -241,9 +246,12 @@ export const EnhancedWorkflowBuilder = () => {
           label: component.defaultProperties.label || component.name,
           stepType: component.id as WorkflowStepType,
           description: component.description,
+          type: component.id,
           pharmaceuticalType: component.pharmaceuticalType,
           complianceRequirements: component.complianceRequirements || [],
-          properties: { ...component.defaultProperties }
+          properties: { ...component.defaultProperties },
+          gxpCritical: component.gxpCritical,
+          estimatedDuration: component.estimatedDuration
         },
         validation: {
           isValid: true,
@@ -349,48 +357,35 @@ export const EnhancedWorkflowBuilder = () => {
                 <TabsContent value="validation" className="mt-4">
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-lg">Validation Results</CardTitle>
-                      <CardDescription>Workflow compliance & validation status</CardDescription>
+                      <CardTitle className="text-lg">Validation Engine</CardTitle>
+                      <CardDescription>Real-time workflow validation and compliance checking</CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-4">
-                        <Button onClick={validateWorkflow} className="w-full">
-                          <FileCheck className="w-4 h-4 mr-2" />
-                          Run Validation
-                        </Button>
-                        
-                        {nodes.map((node) => {
-                          const n = node as EnhancedWorkflowNode;
-                          if (!n.validation) return null;
-                          
-                          return (
-                            <div key={n.id} className="border rounded p-3">
-                              <div className="flex items-center gap-2 mb-2">
-                                {n.validation.isValid ? (
-                                  <CheckCircle className="w-4 h-4 text-green-600" />
-                                ) : (
-                                  <XCircle className="w-4 h-4 text-red-600" />
-                                )}
-                                <span className="font-medium text-sm">{n.data.label}</span>
-                              </div>
-                              
-                              {n.validation.errors.map((error, i) => (
-                                <div key={i} className="flex items-center gap-2 text-sm text-red-600">
-                                  <XCircle className="w-3 h-3" />
-                                  {error}
-                                </div>
-                              ))}
-                              
-                              {n.validation.warnings.map((warning, i) => (
-                                <div key={i} className="flex items-center gap-2 text-sm text-amber-600">
-                                  <AlertTriangle className="w-3 h-3" />
-                                  {warning}
-                                </div>
-                              ))}
-                            </div>
+                      <ValidationEngine
+                        nodes={nodes.map(node => ({
+                          id: node.id,
+                          type: (node as EnhancedWorkflowNode).data.type || 'form',
+                          data: (node as EnhancedWorkflowNode).data
+                        }))}
+                        connections={edges.map(edge => ({
+                          id: edge.id || `${edge.source}-${edge.target}`,
+                          sourceNodeId: edge.source,
+                          targetNodeId: edge.target
+                        }))}
+                        onValidationUpdate={(nodeId, validation) => {
+                          setNodes((nds) => 
+                            nds.map((node) => {
+                              if (node.id === nodeId) {
+                                return {
+                                  ...node,
+                                  validation
+                                } as EnhancedWorkflowNode;
+                              }
+                              return node;
+                            })
                           );
-                        })}
-                      </div>
+                        }}
+                      />
                     </CardContent>
                   </Card>
                 </TabsContent>
