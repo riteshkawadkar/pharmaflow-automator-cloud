@@ -9,7 +9,28 @@ import {
   GitBranch, 
   Shuffle, 
   Square,
-  StopCircle
+  StopCircle,
+  Upload,
+  FileCheck,
+  Shield,
+  Gavel,
+  CheckCircle2,
+  AlertTriangle,
+  Search,
+  Cpu,
+  TestTube,
+  Beaker,
+  BarChart,
+  Settings,
+  Cog,
+  Crown,
+  GraduationCap,
+  Truck,
+  FileSpreadsheet,
+  AlertCircle,
+  Wrench,
+  GitMerge,
+  Target
 } from 'lucide-react';
 import { WorkflowStepType } from '@/types/workflow-builder';
 
@@ -22,7 +43,29 @@ const STEP_ICONS: Record<WorkflowStepType, any> = {
   decision: GitBranch,
   parallel_gateway: Shuffle,
   exclusive_gateway: Square,
-  end: StopCircle
+  end: StopCircle,
+  document_upload: Upload,
+  document_review: FileCheck,
+  quality_check: Shield,
+  regulatory_check: Gavel,
+  compliance_verification: CheckCircle2,
+  risk_assessment: AlertTriangle,
+  technical_review: Cpu,
+  management_approval: Crown,
+  batch_record: FileSpreadsheet,
+  test_execution: TestTube,
+  calibration: Settings,
+  training_verification: GraduationCap,
+  supplier_verification: Truck,
+  deviation_investigation: AlertCircle,
+  corrective_action: Wrench,
+  change_control: GitMerge,
+  validation_step: CheckSquare,
+  equipment_qualification: Cog,
+  sample_testing: Beaker,
+  data_analysis: BarChart,
+  audit_step: Search,
+  capa_implementation: Target
 };
 
 const STEP_COLORS: Record<WorkflowStepType, string> = {
@@ -34,7 +77,29 @@ const STEP_COLORS: Record<WorkflowStepType, string> = {
   decision: 'bg-indigo-500',
   parallel_gateway: 'bg-gray-500',
   exclusive_gateway: 'bg-pink-500',
-  end: 'bg-red-500'
+  end: 'bg-red-500',
+  document_upload: 'bg-blue-600',
+  document_review: 'bg-indigo-500',
+  quality_check: 'bg-emerald-500',
+  regulatory_check: 'bg-teal-500',
+  compliance_verification: 'bg-green-600',
+  risk_assessment: 'bg-amber-500',
+  technical_review: 'bg-violet-500',
+  management_approval: 'bg-purple-600',
+  batch_record: 'bg-lime-500',
+  test_execution: 'bg-rose-500',
+  calibration: 'bg-gray-600',
+  training_verification: 'bg-indigo-600',
+  supplier_verification: 'bg-orange-600',
+  deviation_investigation: 'bg-red-600',
+  corrective_action: 'bg-orange-700',
+  change_control: 'bg-purple-700',
+  validation_step: 'bg-emerald-600',
+  equipment_qualification: 'bg-stone-500',
+  sample_testing: 'bg-cyan-600',
+  data_analysis: 'bg-blue-700',
+  audit_step: 'bg-slate-500',
+  capa_implementation: 'bg-red-700'
 };
 
 interface WorkflowNodeProps {
