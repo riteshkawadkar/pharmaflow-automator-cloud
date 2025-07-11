@@ -134,6 +134,92 @@ export type Database = {
         }
         Relationships: []
       }
+      workflow_definitions: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          flow_data: Json
+          id: string
+          name: string
+          published_at: string | null
+          status: Database["public"]["Enums"]["workflow_status"]
+          updated_at: string
+          version: number
+          workflow_type: Database["public"]["Enums"]["workflow_type"]
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          flow_data?: Json
+          id?: string
+          name: string
+          published_at?: string | null
+          status?: Database["public"]["Enums"]["workflow_status"]
+          updated_at?: string
+          version?: number
+          workflow_type: Database["public"]["Enums"]["workflow_type"]
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          flow_data?: Json
+          id?: string
+          name?: string
+          published_at?: string | null
+          status?: Database["public"]["Enums"]["workflow_status"]
+          updated_at?: string
+          version?: number
+          workflow_type?: Database["public"]["Enums"]["workflow_type"]
+        }
+        Relationships: []
+      }
+      workflow_steps: {
+        Row: {
+          configuration: Json
+          created_at: string
+          id: string
+          name: string
+          position_x: number
+          position_y: number
+          step_id: string
+          step_type: Database["public"]["Enums"]["workflow_step_type"]
+          workflow_definition_id: string
+        }
+        Insert: {
+          configuration?: Json
+          created_at?: string
+          id?: string
+          name: string
+          position_x?: number
+          position_y?: number
+          step_id: string
+          step_type: Database["public"]["Enums"]["workflow_step_type"]
+          workflow_definition_id: string
+        }
+        Update: {
+          configuration?: Json
+          created_at?: string
+          id?: string
+          name?: string
+          position_x?: number
+          position_y?: number
+          step_id?: string
+          step_type?: Database["public"]["Enums"]["workflow_step_type"]
+          workflow_definition_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflow_steps_workflow_definition_id_fkey"
+            columns: ["workflow_definition_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_definitions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -157,6 +243,17 @@ export type Database = {
         | "approved"
         | "rejected"
         | "cancelled"
+      workflow_status: "draft" | "active" | "inactive" | "archived"
+      workflow_step_type:
+        | "start"
+        | "form_input"
+        | "approval"
+        | "review"
+        | "notification"
+        | "decision"
+        | "parallel_gateway"
+        | "exclusive_gateway"
+        | "end"
       workflow_type:
         | "drug_approval"
         | "clinical_trial_protocol"
@@ -306,6 +403,18 @@ export const Constants = {
         "approved",
         "rejected",
         "cancelled",
+      ],
+      workflow_status: ["draft", "active", "inactive", "archived"],
+      workflow_step_type: [
+        "start",
+        "form_input",
+        "approval",
+        "review",
+        "notification",
+        "decision",
+        "parallel_gateway",
+        "exclusive_gateway",
+        "end",
       ],
       workflow_type: [
         "drug_approval",

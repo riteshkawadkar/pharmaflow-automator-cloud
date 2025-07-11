@@ -47,9 +47,14 @@ export const Header = () => {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
             {user && (
-              <a href="/requests" className="text-muted-foreground hover:text-primary transition-colors">
-                Requests
-              </a>
+              <>
+                <a href="/requests" className="text-muted-foreground hover:text-primary transition-colors">
+                  Requests
+                </a>
+                <a href="/workflows" className="text-muted-foreground hover:text-primary transition-colors">
+                  Workflows
+                </a>
+              </>
             )}
             <a href="#features" className="text-muted-foreground hover:text-primary transition-colors">
               Features
@@ -123,9 +128,14 @@ export const Header = () => {
           <div className="md:hidden py-4 border-t border-border">
             <nav className="flex flex-col space-y-4">
               {user && (
-                <a href="/requests" className="text-muted-foreground hover:text-primary transition-colors">
-                  Requests
-                </a>
+                <>
+                  <a href="/requests" className="text-muted-foreground hover:text-primary transition-colors">
+                    Requests
+                  </a>
+                  <a href="/workflows" className="text-muted-foreground hover:text-primary transition-colors">
+                    Workflows
+                  </a>
+                </>
               )}
               <a href="#features" className="text-muted-foreground hover:text-primary transition-colors">
                 Features
