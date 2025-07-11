@@ -17,6 +17,7 @@ interface CanvasProps {
   onNodeConfigure: (nodeId: string) => void;
   onNodeDelete: (nodeId: string) => void;
   onNodeDuplicate: (nodeId: string) => void;
+  onDrop?: (event: React.DragEvent) => void;
   isReadOnly?: boolean;
 }
 
@@ -34,6 +35,7 @@ export const Canvas: React.FC<CanvasProps> = ({
   onNodeConfigure,
   onNodeDelete,
   onNodeDuplicate,
+  onDrop,
   isReadOnly = false
 }) => {
   const canvasRef = useRef<HTMLDivElement>(null);

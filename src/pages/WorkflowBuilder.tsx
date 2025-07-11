@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { Layout } from '../components/Layout/Layout';
 import { Canvas } from '../components/WorkflowBuilder/Canvas';
-import { ComponentLibrary } from '../components/WorkflowBuilder/ComponentLibrary';
+import { ComponentLibrary } from '../components/workflow-builder/ComponentLibrary';
 import { PropertiesPanel } from '../components/workflow-builder/NodePropertiesPanel';
 import { ValidationEngine } from '../components/WorkflowBuilder/ValidationEngine';
 import { TemplateLibrary } from '../components/WorkflowBuilder/TemplateLibrary';
@@ -142,9 +142,10 @@ export const WorkflowBuilder: React.FC = () => {
     setCanvasState(prev => ({ ...prev, ...updates }));
   }, []);
 
-  // Handle component drag from library
-  const handleComponentDrag = useCallback((component: ComponentLibraryItem) => {
-    console.log('Component being dragged:', component.name);
+  // Handle component drag from library (updated to match ComponentLibrary interface)
+  const handleComponentDragStart = useCallback((event: React.DragEvent, componentId: string) => {
+    event.dataTransfer.setData('application/reactflow', componentId);
+    event.dataTransfer.effectAllowed = 'move';
   }, []);
 
   // Handle node addition from drag and drop
@@ -227,6 +228,36 @@ export const WorkflowBuilder: React.FC = () => {
       console.log('✅ Node deleted:', node.data.label);
     }
   }, [nodes, selectedNode]);
+
+
+  const handleComponentDrop = useCallback((event: React.DragEvent) => {
+    event.preventDefault();
+    const componentId = event.dataTransfer.getData('application/reactflow');
+    if (!componentId) return;
+
+    const canvasRect = event.currentTarget.getBoundingClientRect();
+    const position = {
+      x: (event.clientX - canvasRect.left - canvasState.pan.x) / canvasState.zoom,
+      y: (event.clientY - canvasRect.top - canvasState.pan.y) / canvasState.zoom
+    };
+
+    // Create new node from component library
+    const newNode: WorkflowNode = {
+      id: `${componentId}-${uuidv4()}`,
+      type: componentId as any,
+      position: position,
+      data: {
+        label: componentId.charAt(0).toUpperCase() + componentId.slice(1).replace(/_/g, ' '),
+        description: `${componentId} node`,
+        properties: {},
+        pharmaceuticalType: 'batch_release',
+        complianceRequirements: []
+      },
+      connections: []
+    };
+
+    handleNodeAdd(newNode);
+  }, [canvasState, handleNodeAdd]);
 
   // Handle node duplication
   const handleNodeDuplicate = useCallback((nodeId: string) => {
@@ -349,7 +380,7 @@ export const WorkflowBuilder: React.FC = () => {
     <Layout>
       <div className="flex h-full">
         {/* Component Library */}
-        <ComponentLibrary onComponentDrag={handleComponentDrag} />
+        <ComponentLibrary onDragStart={handleComponentDragStart} />
 
         {/* Canvas Area */}
         <div className="flex-1 relative flex flex-col">
@@ -405,6 +436,7 @@ export const WorkflowBuilder: React.FC = () => {
             onNodeConfigure={handleNodeConfigure}
             onNodeDelete={handleNodeDelete}
             onNodeDuplicate={handleNodeDuplicate}
+            onDrop={handleComponentDrop}
           />
         </div>
         </div>
