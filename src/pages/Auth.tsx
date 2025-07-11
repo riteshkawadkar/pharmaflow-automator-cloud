@@ -203,19 +203,31 @@ export default function Auth() {
           if (data.user) {
             // Update role if not default requester
             if (user.role !== 'requester') {
-              // First delete the default role
-              await supabase
-                .from('user_roles')
-                .delete()
-                .eq('user_id', data.user.id);
+              try {
+                // First delete the default role
+                const { error: deleteError } = await supabase
+                  .from('user_roles')
+                  .delete()
+                  .eq('user_id', data.user.id);
 
-              // Then insert the correct role
-              await supabase
-                .from('user_roles')
-                .insert({
-                  user_id: data.user.id,
-                  role: user.role
-                });
+                if (deleteError) {
+                  console.error('Error deleting default role:', deleteError);
+                }
+
+                // Then insert the correct role
+                const { error: insertError } = await supabase
+                  .from('user_roles')
+                  .insert({
+                    user_id: data.user.id,
+                    role: user.role
+                  });
+
+                if (insertError) {
+                  console.error('Error inserting new role:', insertError);
+                }
+              } catch (roleError) {
+                console.error('Error updating user role:', roleError);
+              }
             }
             
             successCount++;
