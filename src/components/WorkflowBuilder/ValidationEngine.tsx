@@ -15,7 +15,7 @@ export const ValidationEngine: React.FC<ValidationEngineProps> = ({
 }) => {
   const [validationResults, setValidationResults] = React.useState<Record<string, ValidationResult>>({});
 
-  // Real-time validation
+  // Real-time validation with debouncing
   React.useEffect(() => {
     const validateWorkflow = () => {
       const results: Record<string, ValidationResult> = {};
@@ -29,8 +29,9 @@ export const ValidationEngine: React.FC<ValidationEngineProps> = ({
       setValidationResults(results);
     };
 
-    validateWorkflow();
-  }, [nodes, connections, onValidationUpdate]);
+    const timer = setTimeout(validateWorkflow, 300);
+    return () => clearTimeout(timer);
+  }, [nodes.length, connections.length, JSON.stringify(nodes.map(n => ({ id: n.id, type: n.type, label: n.data.label })))]);
 
   const validateNode = (node: WorkflowNode, allNodes: WorkflowNode[], allConnections: Connection[]): ValidationResult => {
     const errors: ValidationError[] = [];

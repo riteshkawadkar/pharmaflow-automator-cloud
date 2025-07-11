@@ -106,44 +106,44 @@ export const Canvas: React.FC<CanvasProps> = ({
     }
   };
 
-  // Auto-save functionality
+  // Auto-save functionality with dependency optimization
   useEffect(() => {
     if (!isReadOnly && nodes.length > 0) {
       const timer = setTimeout(() => {
         handleAutoSave();
-      }, 30000); // Auto-save every 30 seconds
+      }, 30000);
 
       return () => clearTimeout(timer);
     }
-  }, [nodes, connections, isReadOnly]);
+  }, [nodes.length, connections.length, isReadOnly]);
 
   return (
-    <div className="relative w-full h-full bg-gray-50 overflow-hidden">
+    <div className="relative w-full h-full bg-background overflow-hidden">
       {/* Toolbar */}
-      <div className="absolute top-4 left-4 z-10 flex items-center space-x-2 bg-white rounded-lg shadow-md p-2">
+      <div className="absolute top-4 left-4 z-10 flex items-center space-x-2 bg-card rounded-lg shadow-soft p-2 border border-border">
         <button
           onClick={handleZoomIn}
-          className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded"
+          className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded transition-colors"
           title="Zoom In"
         >
           <ZoomIn className="w-4 h-4" />
         </button>
         <button
           onClick={handleZoomOut}
-          className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded"
+          className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded transition-colors"
           title="Zoom Out"
         >
           <ZoomOut className="w-4 h-4" />
         </button>
         <button
           onClick={handleFitToScreen}
-          className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded"
+          className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded transition-colors"
           title="Fit to Screen"
         >
           <Maximize className="w-4 h-4" />
         </button>
-        <div className="w-px h-6 bg-gray-300" />
-        <span className="text-sm text-gray-500">{Math.round(canvasState.zoom * 100)}%</span>
+        <div className="w-px h-6 bg-border" />
+        <span className="text-sm text-muted-foreground">{Math.round(canvasState.zoom * 100)}%</span>
       </div>
 
       {/* Action Buttons */}
@@ -151,14 +151,14 @@ export const Canvas: React.FC<CanvasProps> = ({
         <button
           onClick={onSave}
           disabled={isAutoSaving}
-          className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+          className="flex items-center space-x-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary-hover disabled:opacity-50 transition-colors shadow-soft"
         >
           <Save className="w-4 h-4" />
           <span>{isAutoSaving ? 'Saving...' : 'Save'}</span>
         </button>
         <button
           onClick={onExecute}
-          className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+          className="flex items-center space-x-2 px-4 py-2 bg-accent text-accent-foreground rounded-lg hover:bg-accent-hover transition-colors shadow-soft"
         >
           <Play className="w-4 h-4" />
           <span>Execute</span>
@@ -167,7 +167,7 @@ export const Canvas: React.FC<CanvasProps> = ({
 
       {/* Auto-save indicator */}
       {lastSaved && (
-        <div className="absolute bottom-4 right-4 z-10 text-xs text-gray-500 bg-white px-2 py-1 rounded shadow">
+        <div className="absolute bottom-4 right-4 z-10 text-xs text-muted-foreground bg-card px-2 py-1 rounded shadow-soft border border-border">
           Last saved: {lastSaved.toLocaleTimeString()}
         </div>
       )}
@@ -185,11 +185,11 @@ export const Canvas: React.FC<CanvasProps> = ({
       >
         {/* Grid background */}
         <div
-          className="absolute inset-0 opacity-20"
+          className="absolute inset-0 opacity-10"
           style={{
             backgroundImage: `
-              linear-gradient(to right, #e5e7eb 1px, transparent 1px),
-              linear-gradient(to bottom, #e5e7eb 1px, transparent 1px)
+              linear-gradient(to right, hsl(var(--border)) 1px, transparent 1px),
+              linear-gradient(to bottom, hsl(var(--border)) 1px, transparent 1px)
             `,
             backgroundSize: '20px 20px'
           }}
@@ -215,9 +215,10 @@ export const Canvas: React.FC<CanvasProps> = ({
                 y1={y1}
                 x2={x2}
                 y2={y2}
-                stroke="#374151"
+                stroke="hsl(var(--primary))"
                 strokeWidth="2"
                 markerEnd="url(#arrowhead)"
+                className="drop-shadow-sm"
               />
             );
           })}
@@ -234,7 +235,7 @@ export const Canvas: React.FC<CanvasProps> = ({
             >
               <polygon
                 points="0 0, 10 3.5, 0 7"
-                fill="#374151"
+                fill="hsl(var(--primary))"
               />
             </marker>
           </defs>
@@ -244,10 +245,10 @@ export const Canvas: React.FC<CanvasProps> = ({
         {nodes.map(node => (
           <div
             key={node.id}
-            className={`absolute bg-white border-2 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-move p-3 min-w-[200px] ${
+            className={`absolute bg-card border-2 rounded-lg shadow-soft hover:shadow-medium transition-all duration-200 cursor-move p-4 min-w-[240px] ${
               canvasState.selectedNodes.includes(node.id)
-                ? 'border-blue-500 ring-2 ring-blue-200'
-                : 'border-gray-300'
+                ? 'border-primary ring-2 ring-primary/20 shadow-large'
+                : 'border-border hover:border-primary/50'
             }`}
             style={{
               left: node.position.x,
@@ -256,20 +257,24 @@ export const Canvas: React.FC<CanvasProps> = ({
             onClick={() => onNodeSelect(node.id)}
             onDoubleClick={() => onNodeConfigure(node.id)}
           >
-            <div className="flex items-center justify-between">
+            <div className="flex items-start justify-between mb-2">
               <div className="flex-1">
-                <div className="font-medium text-sm text-gray-900">{node.data.label}</div>
-                <div className="text-xs text-gray-500 capitalize">{node.type.replace('_', ' ')}</div>
+                <div className="font-semibold text-sm text-card-foreground mb-1">{node.data.label}</div>
+                <div className="text-xs text-muted-foreground capitalize font-medium px-2 py-1 bg-accent/50 rounded-md inline-block">
+                  {node.type.replace('_', ' ')}
+                </div>
               </div>
               <div className="flex space-x-1">
                 {node.validation?.errors && node.validation.errors.length > 0 && (
-                  <AlertCircle className="w-4 h-4 text-red-500" />
+                  <AlertCircle className="w-4 h-4 text-destructive" />
                 )}
               </div>
             </div>
             
             {node.data.description && (
-              <div className="mt-2 text-xs text-gray-600">{node.data.description}</div>
+              <div className="text-xs text-muted-foreground bg-muted/30 p-2 rounded border-l-2 border-primary/30">
+                {node.data.description}
+              </div>
             )}
           </div>
         ))}
@@ -277,8 +282,8 @@ export const Canvas: React.FC<CanvasProps> = ({
         {/* Empty state */}
         {nodes.length === 0 && (
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-center text-gray-500">
-              <div className="text-lg font-medium mb-2">Empty Workflow</div>
+            <div className="text-center text-muted-foreground">
+              <div className="text-lg font-semibold mb-2 text-foreground">Empty Workflow</div>
               <div className="text-sm">Drag components from the library to start building</div>
             </div>
           </div>
