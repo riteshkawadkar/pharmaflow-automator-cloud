@@ -1,9 +1,36 @@
 import { Button } from "@/components/ui/button";
-import { Building2, Menu, X } from "lucide-react";
+import { Building2, Menu, X, LogOut, User } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 export const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, profile, roles, signOut, loading } = useAuth();
+  const navigate = useNavigate();
+
+  const getInitials = () => {
+    if (profile?.first_name && profile?.last_name) {
+      return `${profile.first_name[0]}${profile.last_name[0]}`.toUpperCase();
+    }
+    return user?.email?.[0]?.toUpperCase() || 'U';
+  };
+
+  const getRoleDisplay = () => {
+    if (roles.includes('admin')) return 'Admin';
+    if (roles.includes('approver')) return 'Approver';
+    if (roles.includes('requester')) return 'Requester';
+    return 'User';
+  };
 
   return (
     <header className="fixed top-0 w-full bg-background/95 backdrop-blur-sm border-b border-border z-50">
@@ -35,8 +62,46 @@ export const Header = () => {
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center space-x-4">
-            <Button variant="ghost">Sign In</Button>
-            <Button variant="hero">Request Demo</Button>
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="flex items-center space-x-2">
+                    <Avatar className="h-8 w-8">
+                      <AvatarFallback className="bg-gradient-primary text-white text-sm">
+                        {getInitials()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="text-left">
+                      <div className="text-sm font-medium">
+                        {profile?.first_name && profile?.last_name 
+                          ? `${profile.first_name} ${profile.last_name}`
+                          : user.email
+                        }
+                      </div>
+                      <div className="text-xs text-muted-foreground">{getRoleDisplay()}</div>
+                    </div>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate('/profile')}>
+                    <User className="mr-2 h-4 w-4" />
+                    Profile
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={signOut}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <>
+                <Button variant="ghost" onClick={() => navigate('/auth')}>Sign In</Button>
+                <Button variant="hero" onClick={() => navigate('/auth')}>Get Started</Button>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -65,8 +130,32 @@ export const Header = () => {
                 Pricing
               </a>
               <div className="flex flex-col space-y-2 pt-4">
-                <Button variant="ghost">Sign In</Button>
-                <Button variant="hero">Request Demo</Button>
+                {user ? (
+                  <>
+                    <div className="px-3 py-2 border rounded-md">
+                      <div className="font-medium">
+                        {profile?.first_name && profile?.last_name 
+                          ? `${profile.first_name} ${profile.last_name}`
+                          : user.email
+                        }
+                      </div>
+                      <div className="text-sm text-muted-foreground">{getRoleDisplay()}</div>
+                    </div>
+                    <Button variant="ghost" onClick={() => navigate('/profile')}>
+                      <User className="mr-2 h-4 w-4" />
+                      Profile
+                    </Button>
+                    <Button variant="ghost" onClick={signOut}>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Sign Out
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button variant="ghost" onClick={() => navigate('/auth')}>Sign In</Button>
+                    <Button variant="hero" onClick={() => navigate('/auth')}>Get Started</Button>
+                  </>
+                )}
               </div>
             </nav>
           </div>
