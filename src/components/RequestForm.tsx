@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarIcon, Loader2, Save, Send, Info } from "lucide-react";
+import { CalendarIcon, Loader2, Save, Send, Info, Sparkles } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format } from "date-fns";
@@ -16,6 +16,8 @@ import { useNavigate } from "react-router-dom";
 import { useWorkflowDefinitions } from "@/hooks/useWorkflowDefinitions";
 import { Database } from "@/integrations/supabase/types";
 import { WorkflowEngine } from "@/lib/workflow-engine";
+import { RequestPortal } from "@/components/RequestPortal";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 type WorkflowType = Database['public']['Enums']['workflow_type'];
 
@@ -49,6 +51,7 @@ export const RequestForm = ({ onSuccess, initialData, requestId }: RequestFormPr
   const { toast } = useToast();
   const navigate = useNavigate();
   const { workflowDefinitions, loading: workflowsLoading } = useWorkflowDefinitions();
+  const [showRequestPortal, setShowRequestPortal] = useState(false);
   
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<RequestFormData>({
@@ -228,14 +231,33 @@ export const RequestForm = ({ onSuccess, initialData, requestId }: RequestFormPr
     }
   };
 
+  if (showRequestPortal) {
+    return <RequestPortal onBack={() => setShowRequestPortal(false)} />;
+  }
+
   return (
-    <Card className="border-border/50 shadow-elegant">
-      <CardHeader>
-        <CardTitle>Create New Workflow Request</CardTitle>
-        <CardDescription>
-          Fill out the form below to submit a new pharmaceutical workflow request
-        </CardDescription>
-      </CardHeader>
+    <div className="space-y-6">
+      <Alert className="border-primary/20 bg-primary/5">
+        <Sparkles className="h-4 w-4" />
+        <AlertDescription>
+          <strong>New!</strong> Try our smart request portal with auto-generated forms based on your workflow designs.{" "}
+          <Button 
+            variant="link" 
+            className="p-0 h-auto font-semibold text-primary hover:text-primary/80"
+            onClick={() => setShowRequestPortal(true)}
+          >
+            Try Request Portal →
+          </Button>
+        </AlertDescription>
+      </Alert>
+
+      <Card className="border-border/50 shadow-elegant">
+        <CardHeader>
+          <CardTitle>Create New Workflow Request</CardTitle>
+          <CardDescription>
+            Fill out the form below to submit a new pharmaceutical workflow request
+          </CardDescription>
+        </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Basic Information */}
@@ -402,5 +424,6 @@ export const RequestForm = ({ onSuccess, initialData, requestId }: RequestFormPr
         </form>
       </CardContent>
     </Card>
+    </div>
   );
 };

@@ -34,37 +34,73 @@ export const drugApprovalWorkflowTemplate: WorkflowDefinition = {
                 label: 'Trial Phase',
                 type: 'select',
                 required: true,
-                options: ['Phase I', 'Phase II', 'Phase III', 'Phase IV']
+                options: [
+                  { value: 'phase_i', label: 'Phase I' },
+                  { value: 'phase_ii', label: 'Phase II' },
+                  { value: 'phase_iii', label: 'Phase III' },
+                  { value: 'phase_iv', label: 'Phase IV' }
+                ]
               },
               {
                 id: 'participant_count',
                 label: 'Number of Participants',
                 type: 'number',
-                required: true
+                required: true,
+                placeholder: 'Enter total number of participants'
               },
               {
                 id: 'trial_duration',
                 label: 'Trial Duration (months)',
                 type: 'number',
-                required: true
+                required: true,
+                placeholder: 'Expected duration in months'
               },
               {
                 id: 'primary_endpoint',
                 label: 'Primary Endpoint',
                 type: 'textarea',
-                required: true
+                required: true,
+                placeholder: 'Describe the primary efficacy endpoint'
               },
               {
                 id: 'adverse_events',
                 label: 'Serious Adverse Events',
                 type: 'textarea',
-                required: true
+                required: true,
+                placeholder: 'List any serious adverse events observed'
               },
               {
                 id: 'efficacy_data',
                 label: 'Efficacy Data Summary',
                 type: 'textarea',
-                required: true
+                required: true,
+                placeholder: 'Summarize key efficacy findings'
+              }
+            ],
+            requiredDocuments: [
+              {
+                id: 'protocol_document',
+                label: 'Clinical Trial Protocol',
+                type: 'file',
+                required: true,
+                acceptedTypes: ['pdf', 'doc', 'docx'],
+                description: 'Complete clinical trial protocol document'
+              },
+              {
+                id: 'informed_consent',
+                label: 'Informed Consent Forms',
+                type: 'file',
+                required: true,
+                acceptedTypes: ['pdf', 'doc', 'docx'],
+                description: 'Signed informed consent forms from participants'
+              },
+              {
+                id: 'statistical_report',
+                label: 'Statistical Analysis Report',
+                type: 'file',
+                required: false,
+                acceptedTypes: ['pdf', 'doc', 'docx'],
+                description: 'Detailed statistical analysis of trial results'
               }
             ],
             timeLimit: 72,
@@ -1466,5 +1502,274 @@ export const loopBasedValidationTemplate: WorkflowDefinition = {
       }
     ],
     viewport: { x: 0, y: 0, zoom: 0.5 }
+  }
+};
+
+// HPLC Equipment Access Request Template (Demonstrates auto-form generation)
+export const hplcAccessRequestTemplate: WorkflowDefinition = {
+  name: "HPLC Equipment Access Request",
+  description: "Request access to HPLC analytical equipment with automatic form generation",
+  workflow_type: "change_request",
+  version: 1,
+  status: "active", // Make it active so it shows in portal
+  flow_data: {
+    nodes: [
+      {
+        id: 'start-1',
+        type: 'workflow',
+        position: { x: 100, y: 50 },
+        data: {
+          label: 'Access Request Submitted',
+          stepType: 'start',
+          description: 'User submits HPLC equipment access request',
+          configuration: {}
+        }
+      },
+      {
+        id: 'form_input-1',
+        type: 'workflow',
+        position: { x: 100, y: 200 },
+        data: {
+          label: 'User Information & Justification',
+          stepType: 'form_input',
+          description: 'Collect user details and business justification',
+          configuration: {
+            formFields: [
+              {
+                id: 'employee_id',
+                label: 'Employee ID',
+                type: 'text',
+                required: true,
+                placeholder: 'Enter your employee ID (e.g., EMP12345)'
+              },
+              {
+                id: 'department',
+                label: 'Department',
+                type: 'select',
+                required: true,
+                options: [
+                  { value: 'quality_control', label: 'Quality Control' },
+                  { value: 'research_development', label: 'Research & Development' },
+                  { value: 'regulatory_affairs', label: 'Regulatory Affairs' },
+                  { value: 'manufacturing', label: 'Manufacturing' },
+                  { value: 'quality_assurance', label: 'Quality Assurance' }
+                ]
+              },
+              {
+                id: 'business_justification',
+                label: 'Business Justification',
+                type: 'textarea',
+                required: true,
+                placeholder: 'Explain why you need access to HPLC equipment and how it supports your work'
+              },
+              {
+                id: 'project_name',
+                label: 'Project/Study Name',
+                type: 'text',
+                required: true,
+                placeholder: 'Enter the project or study name'
+              }
+            ]
+          }
+        }
+      },
+      {
+        id: 'form_input-2',
+        type: 'workflow',
+        position: { x: 400, y: 200 },
+        data: {
+          label: 'Access Details & Equipment Selection',
+          stepType: 'form_input',
+          description: 'Specify access timeframe and equipment requirements',
+          configuration: {
+            formFields: [
+              {
+                id: 'access_start_date',
+                label: 'Access Start Date',
+                type: 'date',
+                required: true
+              },
+              {
+                id: 'access_end_date',
+                label: 'Access End Date',
+                type: 'date',
+                required: true
+              },
+              {
+                id: 'estimated_hours_per_week',
+                label: 'Estimated Hours Per Week',
+                type: 'number',
+                required: true,
+                placeholder: 'How many hours per week will you use the equipment?'
+              },
+              {
+                id: 'sample_type',
+                label: 'Sample Type',
+                type: 'select',
+                required: true,
+                options: [
+                  { value: 'pharmaceutical_api', label: 'Pharmaceutical API' },
+                  { value: 'excipients', label: 'Excipients' },
+                  { value: 'formulation', label: 'Formulation/Finished Product' },
+                  { value: 'raw_materials', label: 'Raw Materials' },
+                  { value: 'reference_standards', label: 'Reference Standards' }
+                ]
+              }
+            ],
+            equipmentSelection: {
+              label: 'Select HPLC Equipment',
+              required: true,
+              multiple: false,
+              options: [
+                { value: 'hplc_agilent_1260', label: 'HPLC - Agilent 1260 Infinity (QC Lab A)' },
+                { value: 'hplc_waters_acquity', label: 'UPLC - Waters Acquity (QC Lab B)' },
+                { value: 'hplc_shimadzu_prominence', label: 'HPLC - Shimadzu Prominence (R&D Lab)' },
+                { value: 'hplc_thermo_vanquish', label: 'UHPLC - Thermo Vanquish (Development Lab)' }
+              ]
+            }
+          }
+        }
+      },
+      {
+        id: 'form_input-3',
+        type: 'workflow',
+        position: { x: 700, y: 200 },
+        data: {
+          label: 'Required Documentation Upload',
+          stepType: 'form_input',
+          description: 'Upload required training certificates and safety forms',
+          configuration: {
+            formFields: [
+              {
+                id: 'additional_notes',
+                label: 'Additional Notes or Special Requirements',
+                type: 'textarea',
+                required: false,
+                placeholder: 'Any special requirements or additional information'
+              }
+            ],
+            requiredDocuments: [
+              {
+                id: 'training_certificate',
+                label: 'HPLC Training Certificate',
+                type: 'file',
+                required: true,
+                acceptedTypes: ['pdf', 'jpg', 'jpeg', 'png'],
+                description: 'Valid HPLC equipment training certificate'
+              },
+              {
+                id: 'safety_form',
+                label: 'Laboratory Safety Assessment Form',
+                type: 'file',
+                required: true,
+                acceptedTypes: ['pdf', 'doc', 'docx'],
+                description: 'Completed laboratory safety assessment and acknowledgment form'
+              },
+              {
+                id: 'id_copy',
+                label: 'Photo ID Copy',
+                type: 'file',
+                required: true,
+                acceptedTypes: ['pdf', 'jpg', 'jpeg', 'png'],
+                description: 'Copy of government-issued photo identification'
+              }
+            ]
+          }
+        }
+      },
+      {
+        id: 'approval-1',
+        type: 'workflow',
+        position: { x: 400, y: 350 },
+        data: {
+          label: 'Lab Supervisor Approval',
+          stepType: 'approval',
+          description: 'Lab supervisor reviews and approves equipment access request',
+          configuration: {
+            approvers: ['lab.supervisor@company.com'],
+            approvalType: 'single',
+            timeLimit: 48,
+            instructions: 'Review employee qualifications, training status, and business justification for HPLC equipment access'
+          }
+        }
+      },
+      {
+        id: 'notification-1',
+        type: 'workflow',
+        position: { x: 400, y: 500 },
+        data: {
+          label: 'Access Granted Notification',
+          stepType: 'notification',
+          description: 'Notify user and relevant parties of approved access',
+          configuration: {
+            recipients: ['{{requester_email}}', 'lab.manager@company.com', 'equipment.coordinator@company.com'],
+            template: `Equipment Access Approved
+
+Dear {{employee_name}},
+
+Your request for HPLC equipment access has been approved.
+
+Equipment: {{selected_equipment}}
+Access Period: {{access_start_date}} to {{access_end_date}}
+Project: {{project_name}}
+
+Please ensure you follow all safety protocols and equipment usage guidelines.
+
+Best regards,
+Laboratory Management Team`
+          }
+        }
+      },
+      {
+        id: 'end-1',
+        type: 'workflow',
+        position: { x: 400, y: 650 },
+        data: {
+          label: 'Access Granted',
+          stepType: 'end',
+          description: 'HPLC equipment access successfully granted',
+          configuration: {}
+        }
+      }
+    ],
+    edges: [
+      {
+        id: 'e1',
+        source: 'start-1',
+        target: 'form_input-1',
+        type: 'smoothstep'
+      },
+      {
+        id: 'e2',
+        source: 'form_input-1',
+        target: 'form_input-2',
+        type: 'smoothstep'
+      },
+      {
+        id: 'e3',
+        source: 'form_input-2',
+        target: 'form_input-3',
+        type: 'smoothstep'
+      },
+      {
+        id: 'e4',
+        source: 'form_input-3',
+        target: 'approval-1',
+        type: 'smoothstep'
+      },
+      {
+        id: 'e5',
+        source: 'approval-1',
+        target: 'notification-1',
+        type: 'smoothstep'
+      },
+      {
+        id: 'e6',
+        source: 'notification-1',
+        target: 'end-1',
+        type: 'smoothstep'
+      }
+    ],
+    viewport: { x: 0, y: 0, zoom: 0.8 }
   }
 };
