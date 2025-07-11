@@ -110,6 +110,9 @@ export default function Requests() {
   };
 
   const getWorkflowTypeLabel = (workflowType: string) => {
+    if (!workflowDefinitions || workflowDefinitions.length === 0) {
+      return workflowType; // Fallback to workflow_type if no definitions loaded
+    }
     const workflow = workflowDefinitions.find(w => w.workflow_type === workflowType);
     return workflow?.name || workflowType;
   };
