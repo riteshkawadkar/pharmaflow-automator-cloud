@@ -29,7 +29,7 @@ export interface GeneratedForm {
 export class WorkflowFormGenerator {
   static generateFormFromWorkflow(workflowDefinition: WorkflowDefinition): GeneratedForm {
     console.log('🚀 Generating form for workflow:', workflowDefinition.name);
-    console.log('📋 Workflow nodes:', workflowDefinition.flow_data?.nodes?.length || 0);
+    console.log('📋 Workflow flow_data:', workflowDefinition.flow_data);
     
     const form: GeneratedForm = {
       title: `${workflowDefinition.name} Request`,
@@ -37,9 +37,33 @@ export class WorkflowFormGenerator {
       sections: []
     };
 
+    // Safe navigation - check if flow_data and nodes exist
+    if (!workflowDefinition.flow_data || !workflowDefinition.flow_data.nodes) {
+      console.log('⚠️ Workflow has no flow_data or nodes, creating basic form');
+      // Create a basic fallback form
+      form.sections.push({
+        id: 'basic-info',
+        title: 'Basic Information',
+        description: 'Please provide the required information for this request',
+        fields: [
+          {
+            id: 'request_details',
+            label: 'Request Details',
+            type: 'textarea',
+            required: true,
+            placeholder: 'Describe your request in detail'
+          }
+        ],
+        stepType: 'form_input'
+      });
+      return form;
+    }
+
+    console.log('📋 Workflow nodes:', workflowDefinition.flow_data.nodes.length);
+
     // Extract form-generating nodes from the workflow
     const formNodes = workflowDefinition.flow_data.nodes.filter(node => 
-      ['form_input', 'start'].includes(node.data?.stepType)
+      node?.data?.stepType && ['form_input', 'start'].includes(node.data.stepType)
     );
 
     console.log('🔍 Found form nodes:', formNodes.length);

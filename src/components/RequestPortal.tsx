@@ -211,14 +211,17 @@ export const RequestPortal: React.FC<RequestPortalProps> = ({ onBack }) => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {activeWorkflows.map((workflow) => {
+            // Add safety check before generating form
+            console.log('🔧 Processing workflow for card:', workflow.name, 'flow_data exists:', !!workflow.flow_data);
+            
             const generatedForm = WorkflowFormGenerator.generateFormFromWorkflow(workflow);
             const fieldCount = generatedForm.sections.reduce((total, section) => total + section.fields.length, 0);
             const hasDocuments = generatedForm.sections.some(section => 
               section.fields.some(field => field.type === 'file')
             );
-            const hasApprovals = workflow.flow_data.nodes.some((node: any) => 
-              node.data?.stepType === 'approval'
-            );
+            const hasApprovals = workflow.flow_data?.nodes?.some((node: any) => 
+              node?.data?.stepType === 'approval'
+            ) || false;
 
             return (
               <Card 
