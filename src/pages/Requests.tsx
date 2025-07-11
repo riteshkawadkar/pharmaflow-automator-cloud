@@ -4,7 +4,7 @@ import { RequestForm } from "@/components/RequestForm";
 import { Plus, Settings, Database } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useWorkflowTemplates } from "@/hooks/useWorkflowTemplates";
-import { useWorkflowTypes } from "@/hooks/useWorkflowTypes";
+import { useWorkflowDefinitions } from "@/hooks/useWorkflowDefinitions";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,7 +17,7 @@ export default function Requests() {
   const [requests, setRequests] = useState<any[]>([]);
   const [loadingRequests, setLoadingRequests] = useState(true);
   const { createWorkflowTemplates, isCreating } = useWorkflowTemplates();
-  const { getWorkflowTypeLabel } = useWorkflowTypes();
+  const { workflowDefinitions } = useWorkflowDefinitions();
 
   useEffect(() => {
     if (user) {
@@ -107,6 +107,11 @@ export default function Requests() {
       case 'low': return 'secondary';
       default: return 'secondary';
     }
+  };
+
+  const getWorkflowTypeLabel = (workflowType: string) => {
+    const workflow = workflowDefinitions.find(w => w.workflow_type === workflowType);
+    return workflow?.name || workflowType;
   };
 
   return (

@@ -13,7 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { useWorkflowTypes } from "@/hooks/useWorkflowTypes";
+import { useWorkflowDefinitions } from "@/hooks/useWorkflowDefinitions";
 import { Database } from "@/integrations/supabase/types";
 
 type WorkflowType = Database['public']['Enums']['workflow_type'];
@@ -47,7 +47,7 @@ export const RequestForm = ({ onSuccess, initialData, requestId }: RequestFormPr
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { workflowTypeOptions, getWorkflowTypeDescription } = useWorkflowTypes();
+  const { workflowDefinitions, loading: workflowsLoading } = useWorkflowDefinitions();
   
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<RequestFormData>({
@@ -246,22 +246,28 @@ export const RequestForm = ({ onSuccess, initialData, requestId }: RequestFormPr
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="workflow_type">Workflow Type *</Label>
-                <Select value={formData.workflow_type} onValueChange={handleWorkflowTypeChange}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select workflow type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {workflowTypeOptions.map((workflow) => (
-                      <SelectItem key={workflow.value} value={workflow.value}>
-                        {workflow.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-sm text-muted-foreground flex items-start gap-2">
-                  <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                  {getWorkflowTypeDescription(formData.workflow_type)}
-                </p>
+                {workflowsLoading ? (
+                  <div className="text-sm text-muted-foreground">Loading workflows...</div>
+                ) : (
+                  <Select value={formData.workflow_type} onValueChange={handleWorkflowTypeChange}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select workflow type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {workflowDefinitions.map((workflow) => (
+                        <SelectItem key={workflow.id} value={workflow.workflow_type}>
+                          {workflow.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+                {formData.workflow_type && (
+                  <p className="text-sm text-muted-foreground flex items-start gap-2">
+                    <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                    {workflowDefinitions.find(w => w.workflow_type === formData.workflow_type)?.description || 'No description available'}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
