@@ -532,3 +532,939 @@ export const manufacturingChangeWorkflowTemplate: WorkflowDefinition = {
     viewport: { x: 0, y: 0, zoom: 1 }
   }
 };
+
+// Simple Linear Workflow Template
+export const simpleDocumentApprovalTemplate: WorkflowDefinition = {
+  name: "Simple Document Approval",
+  description: "Basic linear document approval workflow",
+  workflow_type: "change_request",
+  version: 1,
+  status: "draft",
+  flow_data: {
+    nodes: [
+      {
+        id: 'start-1',
+        type: 'workflow',
+        position: { x: 100, y: 50 },
+        data: {
+          label: 'Document Submitted',
+          stepType: 'start',
+          description: 'Document submitted for approval',
+          configuration: {}
+        }
+      },
+      {
+        id: 'review-1',
+        type: 'workflow',
+        position: { x: 300, y: 50 },
+        data: {
+          label: 'Initial Review',
+          stepType: 'review',
+          description: 'Initial document review',
+          configuration: {
+            approvers: ['reviewer@company.com'],
+            timeLimit: 24,
+            instructions: 'Review document for completeness and accuracy'
+          }
+        }
+      },
+      {
+        id: 'approval-1',
+        type: 'workflow',
+        position: { x: 500, y: 50 },
+        data: {
+          label: 'Manager Approval',
+          stepType: 'approval',
+          description: 'Manager approval required',
+          configuration: {
+            approvers: ['manager@company.com'],
+            approvalType: 'single',
+            timeLimit: 48,
+            instructions: 'Final approval for document'
+          }
+        }
+      },
+      {
+        id: 'notification-1',
+        type: 'workflow',
+        position: { x: 700, y: 50 },
+        data: {
+          label: 'Send Approval Notice',
+          stepType: 'notification',
+          description: 'Notify stakeholders of approval',
+          configuration: {
+            recipients: ['requester@company.com', 'team@company.com'],
+            template: 'Document {{document_name}} has been approved and is now effective.'
+          }
+        }
+      },
+      {
+        id: 'end-1',
+        type: 'workflow',
+        position: { x: 900, y: 50 },
+        data: {
+          label: 'Document Approved',
+          stepType: 'end',
+          description: 'Document approval process complete',
+          configuration: {}
+        }
+      }
+    ],
+    edges: [
+      {
+        id: 'e1',
+        source: 'start-1',
+        target: 'review-1',
+        type: 'smoothstep'
+      },
+      {
+        id: 'e2',
+        source: 'review-1',
+        target: 'approval-1',
+        type: 'smoothstep'
+      },
+      {
+        id: 'e3',
+        source: 'approval-1',
+        target: 'notification-1',
+        type: 'smoothstep'
+      },
+      {
+        id: 'e4',
+        source: 'notification-1',
+        target: 'end-1',
+        type: 'smoothstep'
+      }
+    ],
+    viewport: { x: 0, y: 0, zoom: 0.8 }
+  }
+};
+
+// Conditional Workflow Template
+export const conditionalQualityControlTemplate: WorkflowDefinition = {
+  name: "Quality Control with Conditions",
+  description: "Quality control workflow with conditional branches",
+  workflow_type: "quality_deviation_investigation",
+  version: 1,
+  status: "draft",
+  flow_data: {
+    nodes: [
+      {
+        id: 'start-1',
+        type: 'workflow',
+        position: { x: 100, y: 100 },
+        data: {
+          label: 'Quality Issue Reported',
+          stepType: 'start',
+          description: 'Quality control issue reported',
+          configuration: {}
+        }
+      },
+      {
+        id: 'form_input-1',
+        type: 'workflow',
+        position: { x: 100, y: 250 },
+        data: {
+          label: 'Issue Assessment',
+          stepType: 'form_input',
+          description: 'Assess severity and impact of quality issue',
+          configuration: {
+            formFields: [
+              {
+                id: 'severity',
+                label: 'Severity Level',
+                type: 'select',
+                required: true,
+                options: ['Critical', 'Major', 'Minor']
+              },
+              {
+                id: 'product_affected',
+                label: 'Product Affected',
+                type: 'text',
+                required: true
+              },
+              {
+                id: 'batch_number',
+                label: 'Batch Number',
+                type: 'text',
+                required: false
+              }
+            ],
+            timeLimit: 8
+          }
+        }
+      },
+      {
+        id: 'decision-1',
+        type: 'workflow',
+        position: { x: 350, y: 250 },
+        data: {
+          label: 'Severity Check',
+          stepType: 'decision',
+          description: 'Determine workflow path based on severity',
+          configuration: {
+            conditions: [
+              {
+                field: 'severity',
+                operator: 'equals',
+                value: 'Critical',
+                outputLabel: 'Critical Path'
+              },
+              {
+                field: 'severity',
+                operator: 'in',
+                value: ['Major', 'Minor'],
+                outputLabel: 'Standard Path'
+              }
+            ]
+          }
+        }
+      },
+      {
+        id: 'notification-1',
+        type: 'workflow',
+        position: { x: 600, y: 150 },
+        data: {
+          label: 'Emergency Alert',
+          stepType: 'notification',
+          description: 'Send emergency alert for critical issues',
+          configuration: {
+            recipients: ['qa.director@company.com', 'ceo@company.com', 'emergency.team@company.com'],
+            template: 'CRITICAL QUALITY ALERT: {{product_affected}} - Batch {{batch_number}} requires immediate attention.'
+          }
+        }
+      },
+      {
+        id: 'approval-1',
+        type: 'workflow',
+        position: { x: 850, y: 150 },
+        data: {
+          label: 'Executive Review',
+          stepType: 'approval',
+          description: 'Executive team approval for critical issues',
+          configuration: {
+            approvers: ['qa.director@company.com', 'operations.director@company.com'],
+            approvalType: 'majority',
+            timeLimit: 4,
+            instructions: 'Immediate review required for critical quality issue'
+          }
+        }
+      },
+      {
+        id: 'review-1',
+        type: 'workflow',
+        position: { x: 600, y: 350 },
+        data: {
+          label: 'Standard Investigation',
+          stepType: 'review',
+          description: 'Standard quality investigation process',
+          configuration: {
+            approvers: ['qa.specialist@company.com'],
+            timeLimit: 72,
+            instructions: 'Conduct thorough investigation and document findings'
+          }
+        }
+      },
+      {
+        id: 'end-1',
+        type: 'workflow',
+        position: { x: 1100, y: 250 },
+        data: {
+          label: 'Issue Resolved',
+          stepType: 'end',
+          description: 'Quality issue investigation complete',
+          configuration: {}
+        }
+      }
+    ],
+    edges: [
+      {
+        id: 'e1',
+        source: 'start-1',
+        target: 'form_input-1',
+        type: 'smoothstep'
+      },
+      {
+        id: 'e2',
+        source: 'form_input-1',
+        target: 'decision-1',
+        type: 'smoothstep'
+      },
+      {
+        id: 'e3',
+        source: 'decision-1',
+        sourceHandle: 'yes',
+        target: 'notification-1',
+        type: 'smoothstep',
+        label: 'Critical'
+      },
+      {
+        id: 'e4',
+        source: 'decision-1',
+        sourceHandle: 'no',
+        target: 'review-1',
+        type: 'smoothstep',
+        label: 'Standard'
+      },
+      {
+        id: 'e5',
+        source: 'notification-1',
+        target: 'approval-1',
+        type: 'smoothstep'
+      },
+      {
+        id: 'e6',
+        source: 'approval-1',
+        target: 'end-1',
+        type: 'smoothstep'
+      },
+      {
+        id: 'e7',
+        source: 'review-1',
+        target: 'end-1',
+        type: 'smoothstep'
+      }
+    ],
+    viewport: { x: 0, y: 0, zoom: 0.7 }
+  }
+};
+
+// Complex Conditional Workflow Template
+export const complexSupplierQualificationTemplate: WorkflowDefinition = {
+  name: "Complex Supplier Qualification",
+  description: "Multi-stage supplier qualification with complex decision logic",
+  workflow_type: "supplier_qualification",
+  version: 1,
+  status: "draft",
+  flow_data: {
+    nodes: [
+      {
+        id: 'start-1',
+        type: 'workflow',
+        position: { x: 100, y: 100 },
+        data: {
+          label: 'Supplier Application',
+          stepType: 'start',
+          description: 'New supplier qualification request',
+          configuration: {}
+        }
+      },
+      {
+        id: 'form_input-1',
+        type: 'workflow',
+        position: { x: 100, y: 250 },
+        data: {
+          label: 'Initial Screening',
+          stepType: 'form_input',
+          description: 'Basic supplier information and capabilities',
+          configuration: {
+            formFields: [
+              {
+                id: 'supplier_type',
+                label: 'Supplier Type',
+                type: 'select',
+                required: true,
+                options: ['Raw Material', 'Equipment', 'Service', 'Packaging']
+              },
+              {
+                id: 'risk_category',
+                label: 'Risk Category',
+                type: 'select',
+                required: true,
+                options: ['High', 'Medium', 'Low']
+              },
+              {
+                id: 'regulatory_requirements',
+                label: 'Regulatory Requirements',
+                type: 'checkbox',
+                required: true,
+                options: ['FDA', 'EMA', 'ICH', 'ISO']
+              }
+            ],
+            timeLimit: 48
+          }
+        }
+      },
+      {
+        id: 'decision-1',
+        type: 'workflow',
+        position: { x: 350, y: 250 },
+        data: {
+          label: 'Risk Assessment',
+          stepType: 'decision',
+          description: 'Evaluate supplier risk level',
+          configuration: {
+            conditions: [
+              {
+                field: 'risk_category',
+                operator: 'equals',
+                value: 'High',
+                outputLabel: 'High Risk Path'
+              },
+              {
+                field: 'risk_category',
+                operator: 'equals',
+                value: 'Medium',
+                outputLabel: 'Medium Risk Path'
+              },
+              {
+                field: 'risk_category',
+                operator: 'equals',
+                value: 'Low',
+                outputLabel: 'Low Risk Path'
+              }
+            ]
+          }
+        }
+      },
+      {
+        id: 'parallel_gateway-1',
+        type: 'workflow',
+        position: { x: 600, y: 150 },
+        data: {
+          label: 'High Risk Evaluation',
+          stepType: 'parallel_gateway',
+          description: 'Parallel evaluation for high-risk suppliers',
+          configuration: {}
+        }
+      },
+      {
+        id: 'approval-1',
+        type: 'workflow',
+        position: { x: 800, y: 100 },
+        data: {
+          label: 'Financial Review',
+          stepType: 'approval',
+          description: 'Financial stability assessment',
+          configuration: {
+            approvers: ['finance.director@company.com'],
+            approvalType: 'single',
+            timeLimit: 72
+          }
+        }
+      },
+      {
+        id: 'approval-2',
+        type: 'workflow',
+        position: { x: 800, y: 200 },
+        data: {
+          label: 'Technical Review',
+          stepType: 'approval',
+          description: 'Technical capability assessment',
+          configuration: {
+            approvers: ['tech.lead@company.com', 'qa.manager@company.com'],
+            approvalType: 'unanimous',
+            timeLimit: 120
+          }
+        }
+      },
+      {
+        id: 'review-1',
+        type: 'workflow',
+        position: { x: 600, y: 300 },
+        data: {
+          label: 'Standard Review',
+          stepType: 'review',
+          description: 'Standard supplier evaluation',
+          configuration: {
+            approvers: ['procurement.manager@company.com'],
+            timeLimit: 96
+          }
+        }
+      },
+      {
+        id: 'review-2',
+        type: 'workflow',
+        position: { x: 600, y: 400 },
+        data: {
+          label: 'Fast Track Review',
+          stepType: 'review',
+          description: 'Expedited review for low-risk suppliers',
+          configuration: {
+            approvers: ['procurement.specialist@company.com'],
+            timeLimit: 24
+          }
+        }
+      },
+      {
+        id: 'exclusive_gateway-1',
+        type: 'workflow',
+        position: { x: 1000, y: 250 },
+        data: {
+          label: 'Final Decision',
+          stepType: 'exclusive_gateway',
+          description: 'Consolidate all review results',
+          configuration: {}
+        }
+      },
+      {
+        id: 'notification-1',
+        type: 'workflow',
+        position: { x: 1200, y: 200 },
+        data: {
+          label: 'Approval Notice',
+          stepType: 'notification',
+          description: 'Notify supplier of approval',
+          configuration: {
+            recipients: ['supplier@external.com', 'procurement@company.com'],
+            template: 'Congratulations! Your supplier qualification has been approved.'
+          }
+        }
+      },
+      {
+        id: 'notification-2',
+        type: 'workflow',
+        position: { x: 1200, y: 300 },
+        data: {
+          label: 'Rejection Notice',
+          stepType: 'notification',
+          description: 'Notify supplier of rejection',
+          configuration: {
+            recipients: ['supplier@external.com', 'procurement@company.com'],
+            template: 'We regret to inform you that your supplier qualification was not approved at this time.'
+          }
+        }
+      },
+      {
+        id: 'end-1',
+        type: 'workflow',
+        position: { x: 1400, y: 200 },
+        data: {
+          label: 'Supplier Qualified',
+          stepType: 'end',
+          description: 'Supplier successfully qualified',
+          configuration: {}
+        }
+      },
+      {
+        id: 'end-2',
+        type: 'workflow',
+        position: { x: 1400, y: 300 },
+        data: {
+          label: 'Supplier Rejected',
+          stepType: 'end',
+          description: 'Supplier qualification rejected',
+          configuration: {}
+        }
+      }
+    ],
+    edges: [
+      {
+        id: 'e1',
+        source: 'start-1',
+        target: 'form_input-1',
+        type: 'smoothstep'
+      },
+      {
+        id: 'e2',
+        source: 'form_input-1',
+        target: 'decision-1',
+        type: 'smoothstep'
+      },
+      {
+        id: 'e3',
+        source: 'decision-1',
+        target: 'parallel_gateway-1',
+        type: 'smoothstep',
+        label: 'High Risk'
+      },
+      {
+        id: 'e4',
+        source: 'decision-1',
+        target: 'review-1',
+        type: 'smoothstep',
+        label: 'Medium Risk'
+      },
+      {
+        id: 'e5',
+        source: 'decision-1',
+        target: 'review-2',
+        type: 'smoothstep',
+        label: 'Low Risk'
+      },
+      {
+        id: 'e6',
+        source: 'parallel_gateway-1',
+        target: 'approval-1',
+        type: 'smoothstep'
+      },
+      {
+        id: 'e7',
+        source: 'parallel_gateway-1',
+        target: 'approval-2',
+        type: 'smoothstep'
+      },
+      {
+        id: 'e8',
+        source: 'approval-1',
+        target: 'exclusive_gateway-1',
+        type: 'smoothstep'
+      },
+      {
+        id: 'e9',
+        source: 'approval-2',
+        target: 'exclusive_gateway-1',
+        type: 'smoothstep'
+      },
+      {
+        id: 'e10',
+        source: 'review-1',
+        target: 'exclusive_gateway-1',
+        type: 'smoothstep'
+      },
+      {
+        id: 'e11',
+        source: 'review-2',
+        target: 'exclusive_gateway-1',
+        type: 'smoothstep'
+      },
+      {
+        id: 'e12',
+        source: 'exclusive_gateway-1',
+        target: 'notification-1',
+        type: 'smoothstep',
+        label: 'Approved'
+      },
+      {
+        id: 'e13',
+        source: 'exclusive_gateway-1',
+        target: 'notification-2',
+        type: 'smoothstep',
+        label: 'Rejected'
+      },
+      {
+        id: 'e14',
+        source: 'notification-1',
+        target: 'end-1',
+        type: 'smoothstep'
+      },
+      {
+        id: 'e15',
+        source: 'notification-2',
+        target: 'end-2',
+        type: 'smoothstep'
+      }
+    ],
+    viewport: { x: 0, y: 0, zoom: 0.6 }
+  }
+};
+
+// Loop-based Workflow Template
+export const loopBasedValidationTemplate: WorkflowDefinition = {
+  name: "Validation Protocol with Iterations",
+  description: "Validation workflow with feedback loops and iterations",
+  workflow_type: "validation_protocol",
+  version: 1,
+  status: "draft",
+  flow_data: {
+    nodes: [
+      {
+        id: 'start-1',
+        type: 'workflow',
+        position: { x: 100, y: 100 },
+        data: {
+          label: 'Validation Request',
+          stepType: 'start',
+          description: 'Equipment/process validation request initiated',
+          configuration: {}
+        }
+      },
+      {
+        id: 'form_input-1',
+        type: 'workflow',
+        position: { x: 100, y: 250 },
+        data: {
+          label: 'Protocol Development',
+          stepType: 'form_input',
+          description: 'Develop validation protocol',
+          configuration: {
+            formFields: [
+              {
+                id: 'validation_type',
+                label: 'Validation Type',
+                type: 'select',
+                required: true,
+                options: ['IQ', 'OQ', 'PQ', 'Cleaning']
+              },
+              {
+                id: 'protocol_version',
+                label: 'Protocol Version',
+                type: 'number',
+                required: true
+              },
+              {
+                id: 'test_parameters',
+                label: 'Test Parameters',
+                type: 'textarea',
+                required: true
+              }
+            ],
+            timeLimit: 120
+          }
+        }
+      },
+      {
+        id: 'review-1',
+        type: 'workflow',
+        position: { x: 350, y: 250 },
+        data: {
+          label: 'Protocol Review',
+          stepType: 'review',
+          description: 'Review validation protocol for completeness',
+          configuration: {
+            approvers: ['validation.manager@company.com', 'qa.lead@company.com'],
+            timeLimit: 72,
+            instructions: 'Review protocol for technical accuracy and compliance'
+          }
+        }
+      },
+      {
+        id: 'decision-1',
+        type: 'workflow',
+        position: { x: 600, y: 250 },
+        data: {
+          label: 'Protocol Approved?',
+          stepType: 'decision',
+          description: 'Check if protocol meets requirements',
+          configuration: {
+            conditions: [
+              {
+                field: 'review_result',
+                operator: 'equals',
+                value: 'approved',
+                outputLabel: 'Approved'
+              },
+              {
+                field: 'review_result',
+                operator: 'equals',
+                value: 'needs_revision',
+                outputLabel: 'Needs Revision'
+              }
+            ]
+          }
+        }
+      },
+      {
+        id: 'form_input-2',
+        type: 'workflow',
+        position: { x: 400, y: 450 },
+        data: {
+          label: 'Protocol Revision',
+          stepType: 'form_input',
+          description: 'Revise protocol based on feedback',
+          configuration: {
+            formFields: [
+              {
+                id: 'revision_notes',
+                label: 'Revision Notes',
+                type: 'textarea',
+                required: true
+              },
+              {
+                id: 'changes_made',
+                label: 'Changes Made',
+                type: 'textarea',
+                required: true
+              }
+            ],
+            timeLimit: 48
+          }
+        }
+      },
+      {
+        id: 'form_input-3',
+        type: 'workflow',
+        position: { x: 850, y: 250 },
+        data: {
+          label: 'Execute Testing',
+          stepType: 'form_input',
+          description: 'Execute validation testing according to protocol',
+          configuration: {
+            formFields: [
+              {
+                id: 'test_results',
+                label: 'Test Results',
+                type: 'textarea',
+                required: true
+              },
+              {
+                id: 'deviations',
+                label: 'Deviations Observed',
+                type: 'textarea',
+                required: false
+              },
+              {
+                id: 'test_date',
+                label: 'Test Date',
+                type: 'date',
+                required: true
+              }
+            ],
+            timeLimit: 168
+          }
+        }
+      },
+      {
+        id: 'review-2',
+        type: 'workflow',
+        position: { x: 1100, y: 250 },
+        data: {
+          label: 'Results Review',
+          stepType: 'review',
+          description: 'Review test results and compliance',
+          configuration: {
+            approvers: ['validation.specialist@company.com'],
+            timeLimit: 48,
+            instructions: 'Verify test results meet acceptance criteria'
+          }
+        }
+      },
+      {
+        id: 'decision-2',
+        type: 'workflow',
+        position: { x: 1350, y: 250 },
+        data: {
+          label: 'Results Acceptable?',
+          stepType: 'decision',
+          description: 'Determine if validation results are acceptable',
+          configuration: {
+            conditions: [
+              {
+                field: 'results_status',
+                operator: 'equals',
+                value: 'passed',
+                outputLabel: 'Passed'
+              },
+              {
+                field: 'results_status',
+                operator: 'equals',
+                value: 'failed',
+                outputLabel: 'Failed - Retest'
+              }
+            ]
+          }
+        }
+      },
+      {
+        id: 'approval-1',
+        type: 'workflow',
+        position: { x: 1600, y: 150 },
+        data: {
+          label: 'Final Approval',
+          stepType: 'approval',
+          description: 'Final validation approval',
+          configuration: {
+            approvers: ['validation.director@company.com', 'qa.director@company.com'],
+            approvalType: 'unanimous',
+            timeLimit: 72,
+            instructions: 'Final approval for validation completion'
+          }
+        }
+      },
+      {
+        id: 'notification-1',
+        type: 'workflow',
+        position: { x: 1200, y: 450 },
+        data: {
+          label: 'Retest Required',
+          stepType: 'notification',
+          description: 'Notify team that retesting is required',
+          configuration: {
+            recipients: ['validation.team@company.com', 'operations@company.com'],
+            template: 'Validation testing failed. Retesting required after corrective actions.'
+          }
+        }
+      },
+      {
+        id: 'end-1',
+        type: 'workflow',
+        position: { x: 1850, y: 150 },
+        data: {
+          label: 'Validation Complete',
+          stepType: 'end',
+          description: 'Validation successfully completed',
+          configuration: {}
+        }
+      }
+    ],
+    edges: [
+      {
+        id: 'e1',
+        source: 'start-1',
+        target: 'form_input-1',
+        type: 'smoothstep'
+      },
+      {
+        id: 'e2',
+        source: 'form_input-1',
+        target: 'review-1',
+        type: 'smoothstep'
+      },
+      {
+        id: 'e3',
+        source: 'review-1',
+        target: 'decision-1',
+        type: 'smoothstep'
+      },
+      {
+        id: 'e4',
+        source: 'decision-1',
+        target: 'form_input-3',
+        type: 'smoothstep',
+        label: 'Approved'
+      },
+      {
+        id: 'e5',
+        source: 'decision-1',
+        target: 'form_input-2',
+        type: 'smoothstep',
+        label: 'Needs Revision'
+      },
+      {
+        id: 'e6',
+        source: 'form_input-2',
+        target: 'review-1',
+        type: 'smoothstep'
+      },
+      {
+        id: 'e7',
+        source: 'form_input-3',
+        target: 'review-2',
+        type: 'smoothstep'
+      },
+      {
+        id: 'e8',
+        source: 'review-2',
+        target: 'decision-2',
+        type: 'smoothstep'
+      },
+      {
+        id: 'e9',
+        source: 'decision-2',
+        target: 'approval-1',
+        type: 'smoothstep',
+        label: 'Passed'
+      },
+      {
+        id: 'e10',
+        source: 'decision-2',
+        target: 'notification-1',
+        type: 'smoothstep',
+        label: 'Failed'
+      },
+      {
+        id: 'e11',
+        source: 'notification-1',
+        target: 'form_input-3',
+        type: 'smoothstep'
+      },
+      {
+        id: 'e12',
+        source: 'approval-1',
+        target: 'end-1',
+        type: 'smoothstep'
+      }
+    ],
+    viewport: { x: 0, y: 0, zoom: 0.5 }
+  }
+};
