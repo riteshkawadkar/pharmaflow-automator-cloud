@@ -198,11 +198,13 @@ export const NodePropertiesPanel = ({ selectedNode, onUpdateNode }: NodeProperti
                   placeholder="Add approver email"
                   onKeyPress={(e) => {
                     if (e.key === 'Enter') {
-                      const email = (e.target as HTMLInputElement).value;
-                      updateConfig({ 
-                        approvers: [...(config.approvers || []), email] 
-                      });
-                      (e.target as HTMLInputElement).value = '';
+                      const email = (e.target as HTMLInputElement).value.trim();
+                      if (email && !config.approvers?.includes(email)) {
+                        updateConfig({ 
+                          approvers: [...(config.approvers || []), email] 
+                        });
+                        (e.target as HTMLInputElement).value = '';
+                      }
                     }
                   }}
                 />
@@ -393,7 +395,7 @@ export const NodePropertiesPanel = ({ selectedNode, onUpdateNode }: NodeProperti
               />
             </div>
             <div>
-              <Label>Reviewers</Label>
+              <Label>Reviewers (email addresses)</Label>
               <div className="space-y-2">
                 {config.approvers?.map((email, index) => (
                   <Badge key={index} variant="secondary" className="mr-1">
@@ -410,11 +412,13 @@ export const NodePropertiesPanel = ({ selectedNode, onUpdateNode }: NodeProperti
                   placeholder="Add reviewer email"
                   onKeyPress={(e) => {
                     if (e.key === 'Enter') {
-                      const email = (e.target as HTMLInputElement).value;
-                      updateConfig({ 
-                        approvers: [...(config.approvers || []), email] 
-                      });
-                      (e.target as HTMLInputElement).value = '';
+                      const email = (e.target as HTMLInputElement).value.trim();
+                      if (email && !config.approvers?.includes(email)) {
+                        updateConfig({ 
+                          approvers: [...(config.approvers || []), email] 
+                        });
+                        (e.target as HTMLInputElement).value = '';
+                      }
                     }
                   }}
                 />
