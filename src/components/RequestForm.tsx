@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, CalendarIcon, Loader2, Save, Send } from "lucide-react";
+import { CalendarIcon, Loader2, Save, Send, Info } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format } from "date-fns";
@@ -13,16 +13,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { WorkflowType, WORKFLOW_CONFIGS, getWorkflowConfig, WorkflowField } from "@/types/workflows";
 
 export interface RequestFormData {
   title: string;
   description: string;
-  request_type: "drug_approval" | "clinical_trial" | "manufacturing_change" | "quality_control" | "regulatory_submission" | "safety_update" | "other";
+  workflow_type: WorkflowType;
   priority: "low" | "medium" | "high" | "urgent";
   target_completion_date: Date | null;
   justification: string;
   business_impact: string;
   regulatory_requirements: string;
+  workflow_data: Record<string, any>;
 }
 
 interface RequestFormProps {
@@ -30,16 +32,6 @@ interface RequestFormProps {
   initialData?: Partial<RequestFormData>;
   requestId?: string;
 }
-
-const REQUEST_TYPES = [
-  { value: "drug_approval", label: "Drug Approval" },
-  { value: "clinical_trial", label: "Clinical Trial" },
-  { value: "manufacturing_change", label: "Manufacturing Change" },
-  { value: "quality_control", label: "Quality Control" },
-  { value: "regulatory_submission", label: "Regulatory Submission" },
-  { value: "safety_update", label: "Safety Update" },
-  { value: "other", label: "Other" }
-];
 
 const PRIORITIES = [
   { value: "low", label: "Low" },
@@ -57,16 +49,37 @@ export const RequestForm = ({ onSuccess, initialData, requestId }: RequestFormPr
   const [formData, setFormData] = useState<RequestFormData>({
     title: initialData?.title || "",
     description: initialData?.description || "",
-    request_type: initialData?.request_type || "drug_approval",
+    workflow_type: (initialData?.workflow_type as WorkflowType) || "drug_approval",
     priority: initialData?.priority || "medium",
     target_completion_date: initialData?.target_completion_date || null,
     justification: initialData?.justification || "",
     business_impact: initialData?.business_impact || "",
-    regulatory_requirements: initialData?.regulatory_requirements || ""
+    regulatory_requirements: initialData?.regulatory_requirements || "",
+    workflow_data: initialData?.workflow_data || {}
   });
+
+  const selectedWorkflow = getWorkflowConfig(formData.workflow_type);
 
   const updateField = (field: keyof RequestFormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const updateWorkflowData = (fieldId: string, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      workflow_data: {
+        ...prev.workflow_data,
+        [fieldId]: value
+      }
+    }));
+  };
+
+  const handleWorkflowTypeChange = (newWorkflowType: WorkflowType) => {
+    setFormData(prev => ({
+      ...prev,
+      workflow_type: newWorkflowType,
+      workflow_data: {} // Reset workflow-specific data when changing types
+    }));
   };
 
   const validateForm = (): string[] => {
@@ -74,8 +87,17 @@ export const RequestForm = ({ onSuccess, initialData, requestId }: RequestFormPr
     
     if (!formData.title.trim()) errors.push("Title is required");
     if (!formData.description.trim()) errors.push("Description is required");
-    if (!formData.request_type) errors.push("Request type is required");
+    if (!formData.workflow_type) errors.push("Workflow type is required");
     if (!formData.justification.trim()) errors.push("Justification is required");
+    
+    // Validate workflow-specific required fields
+    if (selectedWorkflow) {
+      selectedWorkflow.additionalFields.forEach(field => {
+        if (field.required && !formData.workflow_data[field.id]) {
+          errors.push(`${field.label} is required`);
+        }
+      });
+    }
     
     return errors;
   };
@@ -87,8 +109,15 @@ export const RequestForm = ({ onSuccess, initialData, requestId }: RequestFormPr
     try {
       const requestData = {
         requester_id: user.id,
-        ...formData,
+        title: formData.title,
+        description: formData.description,
+        workflow_type: formData.workflow_type,
+        priority: formData.priority,
         target_completion_date: formData.target_completion_date?.toISOString().split('T')[0] || null,
+        justification: formData.justification,
+        business_impact: formData.business_impact,
+        regulatory_requirements: formData.regulatory_requirements,
+        workflow_data: formData.workflow_data,
         status: 'draft' as const
       };
 
@@ -102,7 +131,7 @@ export const RequestForm = ({ onSuccess, initialData, requestId }: RequestFormPr
         
         toast({
           title: "Draft saved",
-          description: "Your request has been saved as a draft.",
+          description: "Your workflow request has been saved as a draft.",
         });
       } else {
         const { error } = await supabase
@@ -113,7 +142,7 @@ export const RequestForm = ({ onSuccess, initialData, requestId }: RequestFormPr
         
         toast({
           title: "Draft saved",
-          description: "Your request has been saved as a draft.",
+          description: "Your workflow request has been saved as a draft.",
         });
       }
       
@@ -148,8 +177,15 @@ export const RequestForm = ({ onSuccess, initialData, requestId }: RequestFormPr
     try {
       const requestData = {
         requester_id: user.id,
-        ...formData,
+        title: formData.title,
+        description: formData.description,
+        workflow_type: formData.workflow_type,
+        priority: formData.priority,
         target_completion_date: formData.target_completion_date?.toISOString().split('T')[0] || null,
+        justification: formData.justification,
+        business_impact: formData.business_impact,
+        regulatory_requirements: formData.regulatory_requirements,
+        workflow_data: formData.workflow_data,
         status: 'submitted' as const,
         submitted_at: new Date().toISOString()
       };
@@ -170,8 +206,8 @@ export const RequestForm = ({ onSuccess, initialData, requestId }: RequestFormPr
       }
       
       toast({
-        title: "Request submitted",
-        description: "Your request has been submitted for review.",
+        title: "Workflow request submitted",
+        description: "Your workflow request has been submitted for review.",
       });
       
       navigate('/requests');
@@ -187,10 +223,96 @@ export const RequestForm = ({ onSuccess, initialData, requestId }: RequestFormPr
     }
   };
 
+  const renderWorkflowField = (field: WorkflowField) => {
+    const value = formData.workflow_data[field.id] || '';
+    
+    switch (field.type) {
+      case 'text':
+      case 'email':
+        return (
+          <Input
+            id={field.id}
+            type={field.type}
+            value={value}
+            onChange={(e) => updateWorkflowData(field.id, e.target.value)}
+            placeholder={field.placeholder}
+            required={field.required}
+          />
+        );
+      
+      case 'number':
+        return (
+          <Input
+            id={field.id}
+            type="number"
+            value={value}
+            onChange={(e) => updateWorkflowData(field.id, e.target.value)}
+            placeholder={field.placeholder}
+            required={field.required}
+          />
+        );
+      
+      case 'textarea':
+        return (
+          <Textarea
+            id={field.id}
+            value={value}
+            onChange={(e) => updateWorkflowData(field.id, e.target.value)}
+            placeholder={field.placeholder}
+            className="min-h-[80px]"
+            required={field.required}
+          />
+        );
+      
+      case 'select':
+        return (
+          <Select value={value} onValueChange={(newValue) => updateWorkflowData(field.id, newValue)}>
+            <SelectTrigger>
+              <SelectValue placeholder={`Select ${field.label.toLowerCase()}`} />
+            </SelectTrigger>
+            <SelectContent>
+              {field.options?.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        );
+      
+      case 'date':
+        const dateValue = value ? new Date(value) : null;
+        return (
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className="w-full justify-start text-left font-normal"
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {dateValue ? format(dateValue, "PPP") : <span>Pick a date</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0">
+              <CalendarComponent
+                mode="single"
+                selected={dateValue || undefined}
+                onSelect={(date) => updateWorkflowData(field.id, date?.toISOString().split('T')[0] || null)}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+        );
+      
+      default:
+        return null;
+    }
+  };
+
   return (
     <Card className="border-border/50 shadow-elegant">
       <CardHeader>
-        <CardTitle>Create New Request</CardTitle>
+        <CardTitle>Create New Workflow Request</CardTitle>
         <CardDescription>
           Fill out the form below to submit a new pharmaceutical workflow request
         </CardDescription>
@@ -207,7 +329,7 @@ export const RequestForm = ({ onSuccess, initialData, requestId }: RequestFormPr
                 id="title"
                 value={formData.title}
                 onChange={(e) => updateField('title', e.target.value)}
-                placeholder="Brief description of your request"
+                placeholder="Brief description of your workflow request"
                 required
               />
             </div>
@@ -226,19 +348,25 @@ export const RequestForm = ({ onSuccess, initialData, requestId }: RequestFormPr
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="request_type">Request Type *</Label>
-                <Select value={formData.request_type} onValueChange={(value) => updateField('request_type', value)}>
+                <Label htmlFor="workflow_type">Workflow Type *</Label>
+                <Select value={formData.workflow_type} onValueChange={handleWorkflowTypeChange}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select request type" />
+                    <SelectValue placeholder="Select workflow type" />
                   </SelectTrigger>
                   <SelectContent>
-                    {REQUEST_TYPES.map((type) => (
-                      <SelectItem key={type.value} value={type.value}>
-                        {type.label}
+                    {WORKFLOW_CONFIGS.map((workflow) => (
+                      <SelectItem key={workflow.type} value={workflow.type}>
+                        {workflow.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
+                {selectedWorkflow && (
+                  <p className="text-sm text-muted-foreground flex items-start gap-2">
+                    <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                    {selectedWorkflow.description}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -286,6 +414,25 @@ export const RequestForm = ({ onSuccess, initialData, requestId }: RequestFormPr
             </div>
           </div>
 
+          {/* Workflow-Specific Fields */}
+          {selectedWorkflow && selectedWorkflow.additionalFields.length > 0 && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">{selectedWorkflow.label} Details</h3>
+              {selectedWorkflow.additionalFields.map((field) => (
+                <div key={field.id} className="space-y-2">
+                  <Label htmlFor={field.id}>
+                    {field.label}
+                    {field.required && <span className="text-red-500 ml-1">*</span>}
+                  </Label>
+                  {renderWorkflowField(field)}
+                  {field.description && (
+                    <p className="text-sm text-muted-foreground">{field.description}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* Additional Information */}
           <div className="space-y-4">
             <h3 className="text-lg font-medium">Additional Information</h3>
@@ -296,7 +443,7 @@ export const RequestForm = ({ onSuccess, initialData, requestId }: RequestFormPr
                 id="justification"
                 value={formData.justification}
                 onChange={(e) => updateField('justification', e.target.value)}
-                placeholder="Explain why this request is necessary"
+                placeholder="Explain why this workflow request is necessary"
                 className="min-h-[100px]"
                 required
               />

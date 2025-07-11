@@ -62,13 +62,14 @@ export type Database = {
           priority: Database["public"]["Enums"]["request_priority"]
           regulatory_requirements: string | null
           rejection_reason: string | null
-          request_type: Database["public"]["Enums"]["request_type"]
           requester_id: string
           status: Database["public"]["Enums"]["request_status"]
           submitted_at: string | null
           target_completion_date: string | null
           title: string
           updated_at: string
+          workflow_data: Json | null
+          workflow_type: Database["public"]["Enums"]["workflow_type"]
         }
         Insert: {
           approved_at?: string | null
@@ -81,13 +82,14 @@ export type Database = {
           priority?: Database["public"]["Enums"]["request_priority"]
           regulatory_requirements?: string | null
           rejection_reason?: string | null
-          request_type: Database["public"]["Enums"]["request_type"]
           requester_id: string
           status?: Database["public"]["Enums"]["request_status"]
           submitted_at?: string | null
           target_completion_date?: string | null
           title: string
           updated_at?: string
+          workflow_data?: Json | null
+          workflow_type?: Database["public"]["Enums"]["workflow_type"]
         }
         Update: {
           approved_at?: string | null
@@ -100,13 +102,14 @@ export type Database = {
           priority?: Database["public"]["Enums"]["request_priority"]
           regulatory_requirements?: string | null
           rejection_reason?: string | null
-          request_type?: Database["public"]["Enums"]["request_type"]
           requester_id?: string
           status?: Database["public"]["Enums"]["request_status"]
           submitted_at?: string | null
           target_completion_date?: string | null
           title?: string
           updated_at?: string
+          workflow_data?: Json | null
+          workflow_type?: Database["public"]["Enums"]["workflow_type"]
         }
         Relationships: []
       }
@@ -154,13 +157,18 @@ export type Database = {
         | "approved"
         | "rejected"
         | "cancelled"
-      request_type:
+      workflow_type:
         | "drug_approval"
-        | "clinical_trial"
-        | "manufacturing_change"
-        | "quality_control"
+        | "clinical_trial_protocol"
+        | "manufacturing_change_control"
+        | "quality_deviation_investigation"
         | "regulatory_submission"
-        | "safety_update"
+        | "pharmacovigilance_case"
+        | "supplier_qualification"
+        | "batch_record_review"
+        | "validation_protocol"
+        | "change_request"
+        | "corrective_action"
         | "other"
     }
     CompositeTypes: {
@@ -299,13 +307,18 @@ export const Constants = {
         "rejected",
         "cancelled",
       ],
-      request_type: [
+      workflow_type: [
         "drug_approval",
-        "clinical_trial",
-        "manufacturing_change",
-        "quality_control",
+        "clinical_trial_protocol",
+        "manufacturing_change_control",
+        "quality_deviation_investigation",
         "regulatory_submission",
-        "safety_update",
+        "pharmacovigilance_case",
+        "supplier_qualification",
+        "batch_record_review",
+        "validation_protocol",
+        "change_request",
+        "corrective_action",
         "other",
       ],
     },
