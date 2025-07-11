@@ -196,8 +196,9 @@ export const NodePropertiesPanel = ({ selectedNode, onUpdateNode }: NodeProperti
                 ))}
                 <Input
                   placeholder="Add approver email"
-                  onKeyPress={(e) => {
+                  onKeyDown={(e) => {
                     if (e.key === 'Enter') {
+                      e.preventDefault();
                       const email = (e.target as HTMLInputElement).value.trim();
                       if (email && !config.approvers?.includes(email)) {
                         updateConfig({ 
@@ -297,11 +298,14 @@ export const NodePropertiesPanel = ({ selectedNode, onUpdateNode }: NodeProperti
                 ))}
                 <Input
                   placeholder="Add recipient email"
-                  onKeyPress={(e) => {
+                  onKeyDown={(e) => {
                     if (e.key === 'Enter') {
-                      const email = (e.target as HTMLInputElement).value;
-                      addRecipient(email);
-                      (e.target as HTMLInputElement).value = '';
+                      e.preventDefault();
+                      const email = (e.target as HTMLInputElement).value.trim();
+                      if (email) {
+                        addRecipient(email);
+                        (e.target as HTMLInputElement).value = '';
+                      }
                     }
                   }}
                 />
@@ -410,8 +414,9 @@ export const NodePropertiesPanel = ({ selectedNode, onUpdateNode }: NodeProperti
                 ))}
                 <Input
                   placeholder="Add reviewer email"
-                  onKeyPress={(e) => {
+                  onKeyDown={(e) => {
                     if (e.key === 'Enter') {
+                      e.preventDefault();
                       const email = (e.target as HTMLInputElement).value.trim();
                       if (email && !config.approvers?.includes(email)) {
                         updateConfig({ 
