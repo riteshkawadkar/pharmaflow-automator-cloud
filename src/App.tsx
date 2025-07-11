@@ -8,6 +8,8 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Requests from "./pages/Requests";
 import WorkflowManagement from "./pages/WorkflowManagement";
+import { EnhancedWorkflowBuilder } from "./pages/EnhancedWorkflowBuilder";
+import { ReactFlowProvider } from '@xyflow/react';
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,7 +25,12 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/requests" element={<Requests />} />
-            <Route path="/workflows" element={<WorkflowManagement />} />
+            <Route path="/workflows" element={
+              <ReactFlowProvider>
+                <EnhancedWorkflowBuilder />
+              </ReactFlowProvider>
+            } />
+            <Route path="/workflows/manage" element={<WorkflowManagement />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
