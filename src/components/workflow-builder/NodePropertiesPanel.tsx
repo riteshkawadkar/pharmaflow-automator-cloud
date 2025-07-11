@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Plus, X, Clock, Users, FileText, Mail, GitBranch, AlertTriangle } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Plus, X, Clock, Users, FileText, Mail, GitBranch, AlertTriangle, ChevronDown, ChevronRight, Settings, CheckCircle, XCircle, Info } from 'lucide-react';
 import { WorkflowStepType, StepConfiguration } from '@/types/workflow-builder';
 
 interface NodePropertiesPanelProps {
@@ -20,11 +21,23 @@ export const NodePropertiesPanel = ({ selectedNode, onUpdateNode }: NodeProperti
   const [config, setConfig] = useState<StepConfiguration>(
     selectedNode?.data?.configuration || {}
   );
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+    fields: true,
+    validation: true,
+    issues: true
+  });
 
   // Update config when selectedNode changes
   useEffect(() => {
     setConfig(selectedNode?.data?.configuration || {});
   }, [selectedNode?.id, selectedNode?.data?.configuration]);
+
+  const toggleSection = (section: string) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
 
   if (!selectedNode) {
     return (
@@ -121,49 +134,153 @@ export const NodePropertiesPanel = ({ selectedNode, onUpdateNode }: NodeProperti
     }
   };
 
-  return (
-    <Card className="w-80 h-full overflow-y-auto">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          {getStepIcon()}
-          {String(selectedNode.data.label)} Properties
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Basic Properties */}
-        <div className="space-y-3">
-          <div>
-            <Label>Step Name</Label>
-            <Input
-              value={String(selectedNode.data.label || '')}
-              onChange={(e) => updateBasicInfo('label', e.target.value)}
-              placeholder="Step name"
-            />
-          </div>
-          <div>
-            <Label>Description</Label>
-            <Textarea
-              value={String(selectedNode.data.description || '')}
-              onChange={(e) => updateBasicInfo('description', e.target.value)}
-              placeholder="Step description"
-              rows={2}
-            />
-          </div>
-          <div>
-            <Label className="flex items-center gap-2">
-              <Clock className="w-4 h-4" />
-              Time Limit (hours)
-            </Label>
-            <Input
-              type="number"
-              value={config.timeLimit || ''}
-              onChange={(e) => updateConfig({ timeLimit: parseInt(e.target.value) || undefined })}
-              placeholder="No limit"
-            />
-          </div>
-        </div>
+  const getFieldsCount = () => {
+    switch (stepType) {
+      case 'form_input':
+        return config.formFields?.length || 0;
+      case 'approval':
+        return config.approvers?.length || 0;
+      case 'notification':
+        return config.recipients?.length || 0;
+      case 'decision':
+        return config.conditions?.length || 0;
+      default:
+        return 0;
+    }
+  };
 
-        <Separator />
+  const getValidationStatus = () => {
+    const hasRequiredFields = getFieldsCount() > 0;
+    const hasProperConfig = stepType === 'start' || stepType === 'end' || hasRequiredFields;
+    return hasProperConfig;
+  };
+
+  const getIssues = () => {
+    const issues: string[] = [];
+    
+    if (stepType === 'approval' && (!config.approvers || config.approvers.length === 0)) {
+      issues.push('Approval node must have at least one approver');
+    }
+    
+    if (stepType === 'form_input' && (!config.formFields || config.formFields.length === 0)) {
+      issues.push('Form must have at least one field');
+    }
+    
+    if (stepType === 'notification' && (!config.recipients || config.recipients.length === 0)) {
+      issues.push('Notification must have at least one recipient');
+    }
+    
+    // GxP Compliance checks
+    if (['approval', 'review', 'quality_check'].includes(stepType)) {
+      issues.push('Compliance requirement not met: 21 CFR Part 11');
+    }
+    
+    return issues;
+  };
+
+  return (
+    <Card className="w-80 h-full overflow-y-auto border-2 border-orange-200">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-sm">
+          {getStepIcon()}
+          {String(selectedNode.data.label)}
+          <div className="flex gap-1 ml-auto">
+            <AlertTriangle className="w-4 h-4 text-orange-500" />
+            <Info className="w-4 h-4 text-blue-500" />
+            <Settings className="w-4 h-4 text-gray-500" />
+          </div>
+        </CardTitle>
+        <p className="text-xs text-muted-foreground">
+          {String(selectedNode.data.description || 'No description')}
+        </p>
+        <Badge variant="outline" className="text-xs w-fit">
+          {String(selectedNode.data.stepType || 'unknown').replace('_', ' ')}
+        </Badge>
+      </CardHeader>
+      <CardContent className="space-y-4 p-4">
+        {/* Fields Section */}
+        <Collapsible 
+          open={expandedSections.fields} 
+          onOpenChange={() => toggleSection('fields')}
+        >
+          <CollapsibleTrigger className="flex items-center justify-between w-full p-2 rounded border bg-muted/50">
+            <div className="flex items-center gap-2">
+              {expandedSections.fields ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+              <span className="text-sm font-medium">Fields:</span>
+              <Badge variant="secondary" className="text-xs">
+                [{getFieldsCount()} items]
+              </Badge>
+              {getFieldsCount() > 3 && (
+                <span className="text-xs text-muted-foreground">+{getFieldsCount() - 3} more...</span>
+              )}
+            </div>
+            <CheckCircle className="w-4 h-4 text-green-500" />
+          </CollapsibleTrigger>
+          <CollapsibleContent className="mt-2 space-y-2">
+            <div className="space-y-2 pl-6">
+              <div>
+                <Label>Step Name</Label>
+                <Input
+                  value={String(selectedNode.data.label || '')}
+                  onChange={(e) => updateBasicInfo('label', e.target.value)}
+                  placeholder="Step name"
+                  className="text-xs"
+                />
+              </div>
+              <div>
+                <Label>Description</Label>
+                <Textarea
+                  value={String(selectedNode.data.description || '')}
+                  onChange={(e) => updateBasicInfo('description', e.target.value)}
+                  placeholder="Step description"
+                  rows={2}
+                  className="text-xs"
+                />
+              </div>
+              <div>
+                <Label className="flex items-center gap-2">
+                  <Clock className="w-4 h-4" />
+                  Time Limit (hours)
+                </Label>
+                <Input
+                  type="number"
+                  value={config.timeLimit || ''}
+                  onChange={(e) => updateConfig({ timeLimit: parseInt(e.target.value) || undefined })}
+                  placeholder="No limit"
+                  className="text-xs"
+                />
+              </div>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+
+        {/* Validation Section */}
+        <Collapsible 
+          open={expandedSections.validation} 
+          onOpenChange={() => toggleSection('validation')}
+        >
+          <CollapsibleTrigger className="flex items-center justify-between w-full p-2 rounded border bg-muted/50">
+            <div className="flex items-center gap-2">
+              {expandedSections.validation ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+              <span className="text-sm font-medium">Validation:</span>
+              <Badge variant={getValidationStatus() ? "default" : "destructive"} className="text-xs">
+                {getValidationStatus() ? "true" : "false"}
+              </Badge>
+            </div>
+            {getValidationStatus() ? 
+              <CheckCircle className="w-4 h-4 text-green-500" /> : 
+              <XCircle className="w-4 h-4 text-red-500" />
+            }
+          </CollapsibleTrigger>
+          <CollapsibleContent className="mt-2 space-y-2">
+            <div className="pl-6 text-xs text-muted-foreground">
+              {getValidationStatus() ? 
+                "All required fields are configured" : 
+                "Missing required configuration"
+              }
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
 
         {/* Step-specific configurations */}
         {stepType === 'approval' && (
@@ -436,6 +553,33 @@ export const NodePropertiesPanel = ({ selectedNode, onUpdateNode }: NodeProperti
             </div>
           </div>
         )}
+
+        {/* Issues Section */}
+        <Collapsible 
+          open={expandedSections.issues} 
+          onOpenChange={() => toggleSection('issues')}
+        >
+          <CollapsibleTrigger className="flex items-center justify-between w-full p-2 rounded border bg-red-50">
+            <div className="flex items-center gap-2">
+              {expandedSections.issues ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+              <span className="text-sm font-medium">Issues:</span>
+            </div>
+            <AlertTriangle className="w-4 h-4 text-red-500" />
+          </CollapsibleTrigger>
+          <CollapsibleContent className="mt-2">
+            <div className="pl-6 space-y-1">
+              {getIssues().map((issue, index) => (
+                <div key={index} className="text-xs text-red-600 bg-red-50 p-2 rounded">
+                  • {issue}
+                </div>
+              ))}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+
+        <div className="text-xs text-muted-foreground text-center border-t pt-2">
+          ID: {selectedNode.id}
+        </div>
       </CardContent>
     </Card>
   );
