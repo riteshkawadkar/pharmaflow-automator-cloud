@@ -65,6 +65,11 @@ const nodeTypes = {
   workflowNode: WorkflowNode,
 };
 
+// Debug: Log components to verify they're defined
+console.log('🔧 DEBUG: WorkflowNode component:', WorkflowNode);
+console.log('🔧 DEBUG: ComponentLibrary component:', ComponentLibrary);
+console.log('🔧 DEBUG: nodeTypes:', nodeTypes);
+
 // Mock templates
 const workflowTemplates: WorkflowTemplate[] = [
   {

@@ -190,3 +190,4 @@ export const WorkflowNode = memo(({ data, selected }: WorkflowNodeProps) => {
     </div>
   );
 });
+
