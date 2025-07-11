@@ -50,6 +50,66 @@ export type Database = {
         }
         Relationships: []
       }
+      requests: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          business_impact: string | null
+          created_at: string
+          description: string
+          id: string
+          justification: string | null
+          priority: Database["public"]["Enums"]["request_priority"]
+          regulatory_requirements: string | null
+          rejection_reason: string | null
+          request_type: Database["public"]["Enums"]["request_type"]
+          requester_id: string
+          status: Database["public"]["Enums"]["request_status"]
+          submitted_at: string | null
+          target_completion_date: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          business_impact?: string | null
+          created_at?: string
+          description: string
+          id?: string
+          justification?: string | null
+          priority?: Database["public"]["Enums"]["request_priority"]
+          regulatory_requirements?: string | null
+          rejection_reason?: string | null
+          request_type: Database["public"]["Enums"]["request_type"]
+          requester_id: string
+          status?: Database["public"]["Enums"]["request_status"]
+          submitted_at?: string | null
+          target_completion_date?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          business_impact?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          justification?: string | null
+          priority?: Database["public"]["Enums"]["request_priority"]
+          regulatory_requirements?: string | null
+          rejection_reason?: string | null
+          request_type?: Database["public"]["Enums"]["request_type"]
+          requester_id?: string
+          status?: Database["public"]["Enums"]["request_status"]
+          submitted_at?: string | null
+          target_completion_date?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -86,6 +146,22 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "approver" | "requester"
+      request_priority: "low" | "medium" | "high" | "urgent"
+      request_status:
+        | "draft"
+        | "submitted"
+        | "under_review"
+        | "approved"
+        | "rejected"
+        | "cancelled"
+      request_type:
+        | "drug_approval"
+        | "clinical_trial"
+        | "manufacturing_change"
+        | "quality_control"
+        | "regulatory_submission"
+        | "safety_update"
+        | "other"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -214,6 +290,24 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "approver", "requester"],
+      request_priority: ["low", "medium", "high", "urgent"],
+      request_status: [
+        "draft",
+        "submitted",
+        "under_review",
+        "approved",
+        "rejected",
+        "cancelled",
+      ],
+      request_type: [
+        "drug_approval",
+        "clinical_trial",
+        "manufacturing_change",
+        "quality_control",
+        "regulatory_submission",
+        "safety_update",
+        "other",
+      ],
     },
   },
 } as const
