@@ -1,15 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Node } from '@xyflow/react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Checkbox } from '@/components/ui/checkbox';
-import { 
+import { MasterDataLookup } from '../MasterDataLookup';
+import {
   Settings,
   Shield,
   Clock,
@@ -28,143 +20,93 @@ import {
   FileDown,
   PenTool,
   GraduationCap,
-  Zap,
-  FileText,
-  GitBranch
+  Zap
 } from 'lucide-react';
-import { WorkflowStepType, StepConfiguration } from '@/types/workflow-builder';
 
 interface NodePropertiesPanelProps {
   selectedNode: Node | null;
   onUpdateNode: (nodeId: string, updates: Partial<Node>) => void;
 }
 
-interface FormField {
-  id: string;
-  name?: string;
-  type: string;
-  label: string;
-  required: boolean;
-  placeholder?: string;
-  validation?: Record<string, any>;
-  options?: Array<{ value: string; label: string }>;
-  pharmaceuticalType?: string;
+interface PropertiesPanelProps {
+  selectedNode: Node | null;
+  onNodeUpdate: (nodeId: string, updates: Partial<Node>) => void;
+  onClose?: () => void;
 }
 
-export const NodePropertiesPanel = ({ selectedNode, onUpdateNode }: NodePropertiesPanelProps) => {
-  const [config, setConfig] = useState<StepConfiguration>(
-    selectedNode?.data?.configuration || {}
+export const NodePropertiesPanel: React.FC<NodePropertiesPanelProps> = ({
+  selectedNode,
+  onUpdateNode
+}) => {
+  return (
+    <PropertiesPanel
+      selectedNode={selectedNode}
+      onNodeUpdate={onUpdateNode}
+      onClose={() => {}}
+    />
   );
-  const [formFields, setFormFields] = useState<FormField[]>([]);
-  const [activeTab, setActiveTab] = useState('general');
+};
 
-  // Update config when selectedNode changes
-  useEffect(() => {
+export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
+  selectedNode,
+  onNodeUpdate,
+  onClose
+}) => {
+  const [activeTab, setActiveTab] = useState<'general' | 'compliance' | 'advanced'>('general');
+  const [nodeProperties, setNodeProperties] = useState(selectedNode?.data?.properties || {});
+  const [formFields, setFormFields] = useState<any[]>([]);
+
+  // Update local state when selectedNode changes
+  React.useEffect(() => {
     if (selectedNode) {
-      const nodeConfig = selectedNode.data?.configuration as StepConfiguration || {};
-      setConfig(nodeConfig);
-      // Handle the type conversion for formFields
-      const fields = nodeConfig.formFields || [];
-      setFormFields(fields.map((field) => ({
-        id: field.id,
-        label: field.label,
-        type: field.type,
-        required: field.required,
-        name: field.name || '',
-        placeholder: field.placeholder || '',
-        options: field.options || [],
-        pharmaceuticalType: field.pharmaceuticalType,
-        validation: field.validation
-      })));
+      const properties = selectedNode.data?.properties as Record<string, any> || {};
+      setNodeProperties(properties);
+      setFormFields(properties.fields || []);
     }
-  }, [selectedNode?.id, selectedNode?.data?.configuration]);
+  }, [selectedNode]);
 
-  if (!selectedNode) {
-    return (
-      <div className="w-80 bg-white border-l border-gray-200 flex items-center justify-center h-full">
-        <div className="text-center text-gray-500">
-          <Settings className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-          <p>Select a node to configure its properties</p>
-        </div>
-      </div>
-    );
-  }
+  const handlePropertyChange = (key: string, value: any) => {
+    if (!selectedNode) return;
 
-  const stepType = selectedNode.data.stepType as WorkflowStepType;
+    const updatedProperties = { ...(nodeProperties as Record<string, any>), [key]: value };
+    setNodeProperties(updatedProperties);
 
-  const updateConfig = (updates: Partial<StepConfiguration>) => {
-    const newConfig = { ...config, ...updates };
-    setConfig(newConfig);
-    onUpdateNode(selectedNode.id, {
+    onNodeUpdate(selectedNode.id, {
       data: {
         ...selectedNode.data,
-        configuration: newConfig
-      }
-    });
-  };
-
-  const updateBasicInfo = (field: string, value: string) => {
-    onUpdateNode(selectedNode.id, {
-      data: {
-        ...selectedNode.data,
-        [field]: value
+        properties: updatedProperties
       }
     });
   };
 
   const addFormField = () => {
-    const newField: FormField = {
+    const newField = {
       id: `field_${Date.now()}`,
       name: `field_${formFields.length + 1}`,
       type: 'text',
       label: `Field ${formFields.length + 1}`,
       required: false,
-      placeholder: 'Enter placeholder'
+      placeholder: '',
+      validation: {}
     };
 
     const updatedFields = [...formFields, newField];
     setFormFields(updatedFields);
-    // Convert for StepConfiguration
-    const configFields = updatedFields.map(field => ({
-      ...field,
-      options: field.options?.map(opt => opt) || []
-    }));
-    updateConfig({ formFields: configFields });
+    handlePropertyChange('fields', updatedFields);
   };
 
-  const updateFormField = (index: number, updates: Partial<FormField>) => {
+  const updateFormField = (index: number, updates: any) => {
     const updatedFields = formFields.map((field, i) =>
       i === index ? { ...field, ...updates } : field
     );
     setFormFields(updatedFields);
-    // Convert for StepConfiguration
-    const configFields = updatedFields.map(field => ({
-      ...field,
-      options: field.options?.map(opt => opt) || []
-    }));
-    updateConfig({ formFields: configFields });
+    handlePropertyChange('fields', updatedFields);
   };
 
   const removeFormField = (index: number) => {
     const updatedFields = formFields.filter((_, i) => i !== index);
     setFormFields(updatedFields);
-    // Convert for StepConfiguration
-    const configFields = updatedFields.map(field => ({
-      ...field,
-      options: field.options?.map(opt => opt) || []
-    }));
-    updateConfig({ formFields: configFields });
-  };
-
-  const getStepIcon = () => {
-    switch (stepType) {
-      case 'approval': return <Users className="w-4 h-4" />;
-      case 'form_input': return <FileText className="w-4 h-4" />;
-      case 'notification': return <Mail className="w-4 h-4" />;
-      case 'decision': return <GitBranch className="w-4 h-4" />;
-      case 'review': return <AlertTriangle className="w-4 h-4" />;
-      default: return <FileText className="w-4 h-4" />;
-    }
+    handlePropertyChange('fields', updatedFields);
   };
 
   const renderFormFieldsList = () => {
@@ -184,103 +126,311 @@ export const NodePropertiesPanel = ({ selectedNode, onUpdateNode }: NodeProperti
               <span className="text-sm font-medium">
                 {field.label || `Field ${index + 1}`}
               </span>
-              <Button
-                size="sm"
-                variant="ghost"
+              <button
                 onClick={() => removeFormField(index)}
-                className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                className="text-destructive hover:text-destructive/80"
               >
                 <Trash2 className="w-4 h-4" />
-              </Button>
+              </button>
             </div>
 
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div>
-                <Label className="text-xs">Label</Label>
-                <Input
+                <label className="block text-muted-foreground mb-1">Label</label>
+                <input
+                  type="text"
                   value={field.label || ''}
                   onChange={(e) => updateFormField(index, { label: e.target.value })}
-                  className="h-7 text-xs"
+                  className="w-full px-2 py-1 border border-border rounded text-xs bg-background"
                   placeholder="Field label"
                 />
               </div>
 
               <div>
-                <Label className="text-xs">Type</Label>
-                <Select
+                <label className="block text-muted-foreground mb-1">Type</label>
+                <select
                   value={field.type || 'text'}
-                  onValueChange={(value) => updateFormField(index, { type: value })}
+                  onChange={(e) => updateFormField(index, { type: e.target.value })}
+                  className="w-full px-2 py-1 border border-border rounded text-xs bg-background"
                 >
-                  <SelectTrigger className="h-7 text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-background border border-border">
-                    <SelectItem value="text">Text</SelectItem>
-                    <SelectItem value="textarea">Textarea</SelectItem>
-                    <SelectItem value="number">Number</SelectItem>
-                    <SelectItem value="date">Date</SelectItem>
-                    <SelectItem value="select">Select</SelectItem>
-                    <SelectItem value="checkbox">Checkbox</SelectItem>
-                    <SelectItem value="radio">Radio</SelectItem>
-                    <SelectItem value="file">File Upload</SelectItem>
-                    <SelectItem value="pharmaceutical">Pharmaceutical</SelectItem>
-                  </SelectContent>
-                </Select>
+                  <option value="text">Text</option>
+                  <option value="textarea">Textarea</option>
+                  <option value="number">Number</option>
+                  <option value="date">Date</option>
+                  <option value="select">Select</option>
+                  <option value="checkbox">Checkbox</option>
+                  <option value="radio">Radio</option>
+                  <option value="file">File Upload</option>
+                  <option value="pharmaceutical">Pharmaceutical</option>
+                </select>
               </div>
 
               <div>
-                <Label className="text-xs">Name</Label>
-                <Input
+                <label className="block text-muted-foreground mb-1">Name</label>
+                <input
+                  type="text"
                   value={field.name || ''}
                   onChange={(e) => updateFormField(index, { name: e.target.value })}
-                  className="h-7 text-xs"
+                  className="w-full px-2 py-1 border border-border rounded text-xs bg-background"
                   placeholder="field_name"
                 />
               </div>
 
               <div>
-                <Label className="text-xs">Placeholder</Label>
-                <Input
+                <label className="block text-muted-foreground mb-1">Placeholder</label>
+                <input
+                  type="text"
                   value={field.placeholder || ''}
                   onChange={(e) => updateFormField(index, { placeholder: e.target.value })}
-                  className="h-7 text-xs"
+                  className="w-full px-2 py-1 border border-border rounded text-xs bg-background"
                   placeholder="Enter placeholder"
                 />
               </div>
             </div>
 
             <div className="mt-2 flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id={`required-${index}`}
+              <label className="flex items-center text-xs">
+                <input
+                  type="checkbox"
                   checked={field.required || false}
-                  onCheckedChange={(checked) => updateFormField(index, { required: !!checked })}
+                  onChange={(e) => updateFormField(index, { required: e.target.checked })}
+                  className="w-3 h-3 mr-1"
                 />
-                <Label htmlFor={`required-${index}`} className="text-xs">Required</Label>
-              </div>
+                Required
+              </label>
 
               {field.type === 'pharmaceutical' && (
-                <Select
+                <select
                   value={field.pharmaceuticalType || ''}
-                  onValueChange={(value) => updateFormField(index, { pharmaceuticalType: value })}
+                  onChange={(e) => updateFormField(index, { pharmaceuticalType: e.target.value })}
+                  className="px-2 py-1 border border-border rounded text-xs bg-background"
                 >
-                  <SelectTrigger className="h-7 text-xs w-32">
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-background border border-border">
-                    <SelectItem value="batch_lot_number">Batch/Lot Number</SelectItem>
-                    <SelectItem value="equipment_id">Equipment ID</SelectItem>
-                    <SelectItem value="product_code">Product Code</SelectItem>
-                    <SelectItem value="regulatory_reference">Regulatory Reference</SelectItem>
-                  </SelectContent>
-                </Select>
+                  <option value="">Select type</option>
+                  <option value="batch_lot_number">Batch/Lot Number</option>
+                  <option value="equipment_id">Equipment ID</option>
+                  <option value="product_code">Product Code</option>
+                  <option value="regulatory_reference">Regulatory Reference</option>
+                </select>
               )}
             </div>
+
+            {field.type === 'select' && (
+              <div className="mt-2">
+                <label className="block text-muted-foreground mb-1 text-xs">Options (one per line)</label>
+                <textarea
+                  value={field.options?.map((opt: any) => `${opt.value}:${opt.label}`).join('\n') || ''}
+                  onChange={(e) => {
+                    const options = e.target.value.split('\n').filter(line => line.trim()).map(line => {
+                      const [value, label] = line.split(':');
+                      return { value: value?.trim() || '', label: label?.trim() || value?.trim() || '' };
+                    });
+                    updateFormField(index, { options });
+                  }}
+                  className="w-full px-2 py-1 border border-border rounded text-xs bg-background"
+                  rows={3}
+                  placeholder="value1:Label 1&#10;value2:Label 2"
+                />
+              </div>
+            )}
           </div>
         ))}
       </div>
     );
   };
+
+  const renderFormField = (
+    key: string,
+    label: string,
+    type: 'text' | 'number' | 'select' | 'checkbox' | 'textarea' = 'text',
+    options?: { value: string; label: string }[],
+    placeholder?: string
+  ) => {
+    const properties = nodeProperties as Record<string, any>;
+    const value = properties[key] || '';
+
+    return (
+      <div key={key} className="mb-4">
+        <label className="block text-sm font-medium mb-2">
+          {label}
+        </label>
+
+        {type === 'text' && (
+          <input
+            type="text"
+            value={value}
+            onChange={(e) => handlePropertyChange(key, e.target.value)}
+            placeholder={placeholder}
+            className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary bg-background"
+          />
+        )}
+
+        {type === 'number' && (
+          <input
+            type="number"
+            value={value}
+            onChange={(e) => handlePropertyChange(key, parseInt(e.target.value) || 0)}
+            placeholder={placeholder}
+            className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary bg-background"
+          />
+        )}
+
+        {type === 'textarea' && (
+          <textarea
+            value={value}
+            onChange={(e) => handlePropertyChange(key, e.target.value)}
+            placeholder={placeholder}
+            rows={3}
+            className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary bg-background"
+          />
+        )}
+
+        {type === 'select' && (
+          <select
+            value={value}
+            onChange={(e) => handlePropertyChange(key, e.target.value)}
+            className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary bg-background"
+          >
+            <option value="">Select {label}</option>
+            {options?.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        )}
+
+        {type === 'checkbox' && (
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              checked={value}
+              onChange={(e) => handlePropertyChange(key, e.target.checked)}
+              className="w-4 h-4 text-primary border-border rounded focus:ring-primary"
+            />
+            <span className="ml-2 text-sm">{label}</span>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderNodeSpecificConfiguration = () => {
+    const nodeType = selectedNode?.data?.stepType || selectedNode?.type;
+    
+    switch (nodeType) {
+      case 'form':
+      case 'form_input':
+        return (
+          <div className="space-y-4">
+            {renderFormField('template', 'Form Template', 'select', [
+              { value: 'batch_release', label: 'Batch Release Form' },
+              { value: 'equipment_qual', label: 'Equipment Qualification' },
+              { value: 'document_review', label: 'Document Review' },
+              { value: 'custom', label: 'Custom Form' }
+            ])}
+            {renderFormField('validation', 'Enable Validation', 'checkbox')}
+            {renderFormField('autoSave', 'Auto-save', 'checkbox')}
+            {renderFormField('attachments', 'Allow Attachments', 'checkbox')}
+
+            {/* Form Fields Management */}
+            <div className="border-t pt-4">
+              <div className="flex items-center justify-between mb-3">
+                <h5 className="text-sm font-medium">Form Fields</h5>
+                <button
+                  onClick={() => addFormField()}
+                  className="flex items-center space-x-1 px-2 py-1 text-xs bg-primary text-primary-foreground rounded hover:bg-primary/90"
+                >
+                  <Plus className="w-3 h-3" />
+                  <span>Add Field</span>
+                </button>
+              </div>
+
+              {renderFormFieldsList()}
+            </div>
+          </div>
+        );
+
+      case 'approval':
+        return (
+          <div className="space-y-4">
+            {renderFormField('approvalType', 'Approval Type', 'select', [
+              { value: 'single', label: 'Single Approver' },
+              { value: 'multiple', label: 'Multiple Approvers' },
+              { value: 'majority', label: 'Majority Vote' },
+              { value: 'unanimous', label: 'Unanimous' }
+            ])}
+            {renderFormField('deadline', 'Deadline (hours)', 'number', undefined, '24')}
+            {renderFormField('escalation', 'Enable Escalation', 'checkbox')}
+            {renderFormField('escalationTime', 'Escalation Time (hours)', 'number', undefined, '48')}
+          </div>
+        );
+
+      case 'email_notifier':
+      case 'notification':
+        return (
+          <div className="space-y-4">
+            {renderFormField('template', 'Email Template', 'select', [
+              { value: 'approval_request', label: 'Approval Request' },
+              { value: 'status_update', label: 'Status Update' },
+              { value: 'completion', label: 'Completion Notice' },
+              { value: 'custom', label: 'Custom Template' }
+            ])}
+            {renderFormField('priority', 'Priority', 'select', [
+              { value: 'low', label: 'Low' },
+              { value: 'normal', label: 'Normal' },
+              { value: 'high', label: 'High' },
+              { value: 'urgent', label: 'Urgent' }
+            ])}
+            {renderFormField('includeAttachments', 'Include Attachments', 'checkbox')}
+          </div>
+        );
+
+      case 'api_connector':
+        return (
+          <div className="space-y-4">
+            {renderFormField('url', 'API URL', 'text', undefined, 'https://api.example.com/endpoint')}
+            {renderFormField('method', 'HTTP Method', 'select', [
+              { value: 'GET', label: 'GET' },
+              { value: 'POST', label: 'POST' },
+              { value: 'PUT', label: 'PUT' },
+              { value: 'DELETE', label: 'DELETE' }
+            ])}
+            {renderFormField('authentication', 'Authentication', 'select', [
+              { value: 'none', label: 'None' },
+              { value: 'basic', label: 'Basic Auth' },
+              { value: 'bearer', label: 'Bearer Token' },
+              { value: 'api_key', label: 'API Key' }
+            ])}
+            {renderFormField('timeout', 'Timeout (seconds)', 'number', undefined, '30')}
+          </div>
+        );
+
+      default:
+        return (
+          <div className="text-sm text-muted-foreground text-center py-4">
+            Configuration options for {String(nodeType)} node will be available soon.
+          </div>
+        );
+    }
+  };
+
+  if (!selectedNode) {
+    return (
+      <div className="w-80 bg-background border-l border-border flex items-center justify-center h-full">
+        <div className="text-center text-muted-foreground">
+          <Settings className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
+          <p>Select a node to configure its properties</p>
+        </div>
+      </div>
+    );
+  }
+
+  console.log('🔧 PropertiesPanel rendering with:', {
+    selectedNodeId: selectedNode.id,
+    selectedNodeType: selectedNode.type,
+    selectedNodeLabel: selectedNode.data.label,
+    nodeProperties: Object.keys(nodeProperties)
+  });
 
   return (
     <div className="w-80 bg-background border-l border-border flex flex-col h-full">
@@ -288,252 +438,156 @@ export const NodePropertiesPanel = ({ selectedNode, onUpdateNode }: NodeProperti
       <div className="p-4 border-b border-border">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-lg font-semibold">Properties</h3>
-          <div className="flex gap-1">
-            <AlertTriangle className="w-4 h-4 text-orange-500" />
-            <Settings className="w-4 h-4 text-muted-foreground" />
-          </div>
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="p-1 text-muted-foreground hover:text-foreground rounded"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
         </div>
 
         <div className="text-sm text-muted-foreground">
           <div className="font-medium">{String(selectedNode.data.label)}</div>
           <div className="text-xs capitalize">
-            {String(selectedNode.data.stepType || 'unknown').replace('_', ' ')} Node
+            {String(selectedNode.data.stepType || selectedNode.type || 'unknown').replace('_', ' ')} Node
           </div>
         </div>
       </div>
 
       {/* Tab Navigation */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-        <TabsList className="grid w-full grid-cols-3 rounded-none border-b border-border bg-background">
-          <TabsTrigger value="general" className="text-xs">General</TabsTrigger>
-          <TabsTrigger value="compliance" className="text-xs">Compliance</TabsTrigger>
-          <TabsTrigger value="advanced" className="text-xs">Advanced</TabsTrigger>
-        </TabsList>
+      <div className="flex border-b border-border">
+        {(['general', 'compliance', 'advanced'] as const).map(tab => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`flex-1 px-4 py-2 text-sm font-medium capitalize ${
+              activeTab === tab
+                ? 'text-primary border-b-2 border-primary bg-primary/10'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            {tab}
+          </button>
+        ))}
+      </div>
 
-        {/* Tab Content */}
-        <div className="flex-1 overflow-y-auto">
-          <TabsContent value="general" className="p-4 space-y-4 mt-0">
-            {/* Basic Information */}
+      {/* Tab Content */}
+      <div className="flex-1 overflow-y-auto p-4">
+        {activeTab === 'general' && (
+          <div className="space-y-4">
+            {/* Basic Properties */}
             <div>
               <h4 className="text-sm font-medium mb-3">Basic Information</h4>
-              
-              <div className="space-y-3">
-                <div>
-                  <Label className="text-xs">Node Label</Label>
-                  <Input
-                    value={String(selectedNode.data.label || '')}
-                    onChange={(e) => updateBasicInfo('label', e.target.value)}
-                    placeholder="Data Collection Form"
-                    className="h-8 text-xs"
-                  />
-                </div>
-                
-                <div>
-                  <Label className="text-xs">Description</Label>
-                  <Textarea
-                    value={String(selectedNode.data.description || '')}
-                    onChange={(e) => updateBasicInfo('description', e.target.value)}
-                    placeholder="Enter node description"
-                    rows={2}
-                    className="text-xs"
-                  />
-                </div>
-              </div>
+
+              {renderFormField('label', 'Node Label', 'text', undefined, 'Enter node label')}
+              {renderFormField('description', 'Description', 'textarea', undefined, 'Enter node description')}
             </div>
 
-            {/* Configuration */}
+            {/* Node-Specific Configuration */}
             <div>
               <h4 className="text-sm font-medium mb-3">Configuration</h4>
-              
-              {stepType === 'form_input' && (
-                <div className="space-y-3">
-                  <div>
-                    <Label className="text-xs">Form Template</Label>
-                    <Select
-                      value={config.template || ''}
-                      onValueChange={(value) => updateConfig({ template: value })}
-                    >
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue placeholder="Select Form Template" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-background border border-border">
-                        <SelectItem value="batch_release">Batch Release Form</SelectItem>
-                        <SelectItem value="quality_check">Quality Check Form</SelectItem>
-                        <SelectItem value="deviation_report">Deviation Report</SelectItem>
-                        <SelectItem value="custom">Custom Form</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="enableValidation"
-                      checked={config.enableValidation || false}
-                      onCheckedChange={(checked) => updateConfig({ enableValidation: !!checked })}
-                    />
-                    <Label htmlFor="enableValidation" className="text-xs">Enable Validation</Label>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="autoSave"
-                      checked={config.autoSave || false}
-                      onCheckedChange={(checked) => updateConfig({ autoSave: !!checked })}
-                    />
-                    <Label htmlFor="autoSave" className="text-xs">Auto-save</Label>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="allowAttachments"
-                      checked={config.allowAttachments || false}
-                      onCheckedChange={(checked) => updateConfig({ allowAttachments: !!checked })}
-                    />
-                    <Label htmlFor="allowAttachments" className="text-xs">Allow Attachments</Label>
-                  </div>
-                </div>
-              )}
-
-              {stepType === 'approval' && (
-                <div className="space-y-3">
-                  <div>
-                    <Label className="text-xs">Approval Type</Label>
-                    <Select
-                      value={config.approvalType || 'single'}
-                      onValueChange={(value) => updateConfig({ approvalType: value as any })}
-                    >
-                      <SelectTrigger className="h-8 text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-background border border-border">
-                        <SelectItem value="single">Single Approver</SelectItem>
-                        <SelectItem value="majority">Majority</SelectItem>
-                        <SelectItem value="unanimous">Unanimous</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              )}
+              {renderNodeSpecificConfiguration()}
             </div>
-
-            {/* Form Fields */}
-            {stepType === 'form_input' && (
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-sm font-medium">Form Fields</h4>
-                  <Button size="sm" onClick={addFormField} className="h-6 text-xs">
-                    <Plus className="w-3 h-3 mr-1" />
-                    Add Field
-                  </Button>
-                </div>
-                {renderFormFieldsList()}
-              </div>
-            )}
 
             {/* Master Data Integration */}
-            <div>
-              <h4 className="text-sm font-medium mb-3">Master Data Integration</h4>
-              <div className="space-y-3">
-                <div>
-                  <Label className="text-xs">Equipment Reference</Label>
-                  <Input
-                    placeholder="Search equipment..."
-                    className="h-8 text-xs"
-                    value={config.equipmentId || ''}
-                    onChange={(e) => updateConfig({ equipmentId: e.target.value })}
-                  />
-                </div>
-                
-                <div>
-                  <Label className="text-xs">Product Code</Label>
-                  <Input
-                    placeholder="Search product codes..."
-                    className="h-8 text-xs"
-                    value={config.productCode || ''}
-                    onChange={(e) => updateConfig({ productCode: e.target.value })}
-                  />
-                </div>
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="compliance" className="p-4 space-y-4 mt-0">
-            <h4 className="text-sm font-medium mb-3">Compliance Requirements</h4>
-            
-            <div className="space-y-3">
-              <div className="p-3 bg-red-50 border border-red-200 rounded-md">
-                <div className="flex items-start space-x-2">
-                  <Shield className="w-4 h-4 text-red-500 mt-0.5" />
+            {(selectedNode.data.stepType === 'form_input' || selectedNode.type === 'form' || selectedNode.type === 'api_connector') && (
+              <div>
+                <h4 className="text-sm font-medium mb-3">Master Data Integration</h4>
+                <div className="space-y-3">
                   <div>
-                    <div className="text-sm font-medium text-red-800">21 CFR Part 11</div>
-                    <div className="text-xs text-red-600 mt-1">Electronic records must be accurate and reliable</div>
-                    <div className="text-xs text-red-500 mt-1 font-medium">Mandatory</div>
+                    <label className="block text-sm font-medium mb-2">
+                      Equipment Reference
+                    </label>
+                    <MasterDataLookup
+                      type="equipment"
+                      value={(nodeProperties as Record<string, any>).equipmentId || ''}
+                      onChange={(value, data) => {
+                        handlePropertyChange('equipmentId', value);
+                        if (data) {
+                          handlePropertyChange('equipmentData', data);
+                        }
+                      }}
+                      placeholder="Search equipment..."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Product Code
+                    </label>
+                    <MasterDataLookup
+                      type="product_code"
+                      value={(nodeProperties as Record<string, any>).productCode || ''}
+                      onChange={(value, data) => {
+                        handlePropertyChange('productCode', value);
+                        if (data) {
+                          handlePropertyChange('productData', data);
+                        }
+                      }}
+                      placeholder="Search product codes..."
+                    />
                   </div>
                 </div>
               </div>
-            </div>
-          </TabsContent>
+            )}
+          </div>
+        )}
 
-          <TabsContent value="advanced" className="p-4 space-y-4 mt-0">
+        {activeTab === 'compliance' && (
+          <div className="space-y-4">
+            <h4 className="text-sm font-medium mb-3">Compliance Requirements</h4>
+
+            {(selectedNode.data as any)?.complianceRequirements && Array.isArray((selectedNode.data as any).complianceRequirements) && (selectedNode.data as any).complianceRequirements.length > 0 ? (
+              <div className="space-y-3">
+                {(selectedNode.data as any).complianceRequirements.map((req: any, index: number) => (
+                  <div key={index} className="p-3 bg-red-50 border border-red-200 rounded-md">
+                    <div className="flex items-start space-x-2">
+                      <Shield className="w-4 h-4 text-red-500 mt-0.5" />
+                      <div>
+                        <div className="text-sm font-medium text-red-800">{req.regulation}</div>
+                        <div className="text-xs text-red-600 mt-1">{req.requirement}</div>
+                        {req.mandatory && (
+                          <div className="text-xs text-red-500 mt-1 font-medium">Mandatory</div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+                  <div className="flex items-start space-x-2">
+                    <Shield className="w-4 h-4 text-red-500 mt-0.5" />
+                    <div>
+                      <div className="text-sm font-medium text-red-800">21 CFR Part 11</div>
+                      <div className="text-xs text-red-600 mt-1">Electronic records must be accurate and reliable</div>
+                      <div className="text-xs text-red-500 mt-1 font-medium">Mandatory</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'advanced' && (
+          <div className="space-y-4">
             <h4 className="text-sm font-medium mb-3">Advanced Settings</h4>
-            
-            <div className="space-y-3">
-              <div>
-                <Label className="text-xs">Timeout (seconds)</Label>
-                <Input
-                  type="number"
-                  value={config.timeout || ''}
-                  onChange={(e) => updateConfig({ timeout: parseInt(e.target.value) || undefined })}
-                  placeholder="30"
-                  className="h-8 text-xs"
-                />
-              </div>
-              
-              <div>
-                <Label className="text-xs">Retry Attempts</Label>
-                <Input
-                  type="number"
-                  value={config.retryAttempts || ''}
-                  onChange={(e) => updateConfig({ retryAttempts: parseInt(e.target.value) || undefined })}
-                  placeholder="3"
-                  className="h-8 text-xs"
-                />
-              </div>
-              
-              <div>
-                <Label className="text-xs">Error Handling</Label>
-                <Select
-                  value={config.errorHandling || ''}
-                  onValueChange={(value) => updateConfig({ errorHandling: value })}
-                >
-                  <SelectTrigger className="h-8 text-xs">
-                    <SelectValue placeholder="Select error handling" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-background border border-border">
-                    <SelectItem value="stop">Stop Workflow</SelectItem>
-                    <SelectItem value="continue">Continue</SelectItem>
-                    <SelectItem value="retry">Retry</SelectItem>
-                    <SelectItem value="escalate">Escalate</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="logging"
-                  checked={config.logging || false}
-                  onCheckedChange={(checked) => updateConfig({ logging: !!checked })}
-                />
-                <Label htmlFor="logging" className="text-xs">Enable Logging</Label>
-              </div>
-            </div>
-          </TabsContent>
-        </div>
-      </Tabs>
 
-      {/* Footer */}
-      <div className="text-xs text-muted-foreground text-center border-t border-border p-2">
-        ID: {selectedNode.id}
+            {renderFormField('timeout', 'Timeout (seconds)', 'number', undefined, '30')}
+            {renderFormField('retryAttempts', 'Retry Attempts', 'number', undefined, '3')}
+            {renderFormField('errorHandling', 'Error Handling', 'select', [
+              { value: 'stop', label: 'Stop Workflow' },
+              { value: 'continue', label: 'Continue' },
+              { value: 'retry', label: 'Retry' },
+              { value: 'escalate', label: 'Escalate' }
+            ])}
+            {renderFormField('logging', 'Enable Logging', 'checkbox')}
+          </div>
+        )}
       </div>
     </div>
   );
