@@ -13,7 +13,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { WorkflowType, WORKFLOW_CONFIGS, getWorkflowConfig, WorkflowField } from "@/types/workflows";
+import { useWorkflowTypes } from "@/hooks/useWorkflowTypes";
+import { Database } from "@/integrations/supabase/types";
+
+type WorkflowType = Database['public']['Enums']['workflow_type'];
 
 export interface RequestFormData {
   title: string;
@@ -44,6 +47,7 @@ export const RequestForm = ({ onSuccess, initialData, requestId }: RequestFormPr
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { workflowTypeOptions, getWorkflowTypeDescription } = useWorkflowTypes();
   
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<RequestFormData>({
@@ -58,20 +62,8 @@ export const RequestForm = ({ onSuccess, initialData, requestId }: RequestFormPr
     workflow_data: initialData?.workflow_data || {}
   });
 
-  const selectedWorkflow = getWorkflowConfig(formData.workflow_type);
-
   const updateField = (field: keyof RequestFormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const updateWorkflowData = (fieldId: string, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      workflow_data: {
-        ...prev.workflow_data,
-        [fieldId]: value
-      }
-    }));
   };
 
   const handleWorkflowTypeChange = (newWorkflowType: WorkflowType) => {
@@ -89,15 +81,6 @@ export const RequestForm = ({ onSuccess, initialData, requestId }: RequestFormPr
     if (!formData.description.trim()) errors.push("Description is required");
     if (!formData.workflow_type) errors.push("Workflow type is required");
     if (!formData.justification.trim()) errors.push("Justification is required");
-    
-    // Validate workflow-specific required fields
-    if (selectedWorkflow) {
-      selectedWorkflow.additionalFields.forEach(field => {
-        if (field.required && !formData.workflow_data[field.id]) {
-          errors.push(`${field.label} is required`);
-        }
-      });
-    }
     
     return errors;
   };
@@ -223,92 +206,6 @@ export const RequestForm = ({ onSuccess, initialData, requestId }: RequestFormPr
     }
   };
 
-  const renderWorkflowField = (field: WorkflowField) => {
-    const value = formData.workflow_data[field.id] || '';
-    
-    switch (field.type) {
-      case 'text':
-      case 'email':
-        return (
-          <Input
-            id={field.id}
-            type={field.type}
-            value={value}
-            onChange={(e) => updateWorkflowData(field.id, e.target.value)}
-            placeholder={field.placeholder}
-            required={field.required}
-          />
-        );
-      
-      case 'number':
-        return (
-          <Input
-            id={field.id}
-            type="number"
-            value={value}
-            onChange={(e) => updateWorkflowData(field.id, e.target.value)}
-            placeholder={field.placeholder}
-            required={field.required}
-          />
-        );
-      
-      case 'textarea':
-        return (
-          <Textarea
-            id={field.id}
-            value={value}
-            onChange={(e) => updateWorkflowData(field.id, e.target.value)}
-            placeholder={field.placeholder}
-            className="min-h-[80px]"
-            required={field.required}
-          />
-        );
-      
-      case 'select':
-        return (
-          <Select value={value} onValueChange={(newValue) => updateWorkflowData(field.id, newValue)}>
-            <SelectTrigger>
-              <SelectValue placeholder={`Select ${field.label.toLowerCase()}`} />
-            </SelectTrigger>
-            <SelectContent>
-              {field.options?.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        );
-      
-      case 'date':
-        const dateValue = value ? new Date(value) : null;
-        return (
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className="w-full justify-start text-left font-normal"
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {dateValue ? format(dateValue, "PPP") : <span>Pick a date</span>}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <CalendarComponent
-                mode="single"
-                selected={dateValue || undefined}
-                onSelect={(date) => updateWorkflowData(field.id, date?.toISOString().split('T')[0] || null)}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-        );
-      
-      default:
-        return null;
-    }
-  };
-
   return (
     <Card className="border-border/50 shadow-elegant">
       <CardHeader>
@@ -354,19 +251,17 @@ export const RequestForm = ({ onSuccess, initialData, requestId }: RequestFormPr
                     <SelectValue placeholder="Select workflow type" />
                   </SelectTrigger>
                   <SelectContent>
-                    {WORKFLOW_CONFIGS.map((workflow) => (
-                      <SelectItem key={workflow.type} value={workflow.type}>
+                    {workflowTypeOptions.map((workflow) => (
+                      <SelectItem key={workflow.value} value={workflow.value}>
                         {workflow.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                {selectedWorkflow && (
-                  <p className="text-sm text-muted-foreground flex items-start gap-2">
-                    <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                    {selectedWorkflow.description}
-                  </p>
-                )}
+                <p className="text-sm text-muted-foreground flex items-start gap-2">
+                  <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                  {getWorkflowTypeDescription(formData.workflow_type)}
+                </p>
               </div>
 
               <div className="space-y-2">
@@ -413,25 +308,6 @@ export const RequestForm = ({ onSuccess, initialData, requestId }: RequestFormPr
               </Popover>
             </div>
           </div>
-
-          {/* Workflow-Specific Fields */}
-          {selectedWorkflow && selectedWorkflow.additionalFields.length > 0 && (
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium">{selectedWorkflow.label} Details</h3>
-              {selectedWorkflow.additionalFields.map((field) => (
-                <div key={field.id} className="space-y-2">
-                  <Label htmlFor={field.id}>
-                    {field.label}
-                    {field.required && <span className="text-red-500 ml-1">*</span>}
-                  </Label>
-                  {renderWorkflowField(field)}
-                  {field.description && (
-                    <p className="text-sm text-muted-foreground">{field.description}</p>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
 
           {/* Additional Information */}
           <div className="space-y-4">
