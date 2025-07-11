@@ -23,7 +23,7 @@ import {
   useReactFlow 
 } from '@xyflow/react';
 import { WorkflowBuilderWrapper } from '@/components/workflow-builder/WorkflowBuilder';
-import { NodePalette } from '@/components/workflow-builder/NodePalette';
+import { ComponentLibrary, ComponentLibraryItem, componentLibrary } from '@/components/workflow-builder/ComponentLibrary';
 import { WorkflowNode } from '@/components/workflow-builder/WorkflowNode';
 import { WorkflowStepType } from '@/types/workflow-builder';
 import { Play, Save, Share, Download, Upload, Settings, Users, FileCheck, Trash2, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
@@ -200,34 +200,45 @@ export const EnhancedWorkflowBuilder = () => {
     [setEdges]
   );
 
-  const onDragStart = (event: React.DragEvent, stepType: WorkflowStepType) => {
-    event.dataTransfer.setData('application/reactflow', stepType);
-    event.dataTransfer.effectAllowed = 'move';
+  const onDragStart = (event: React.DragEvent, componentId: string) => {
+    const component = componentLibrary.find(c => c.id === componentId);
+    if (component) {
+      event.dataTransfer.setData('application/reactflow', JSON.stringify(component));
+      event.dataTransfer.effectAllowed = 'move';
+    }
   };
 
   const onDrop = useCallback(
     (event: React.DragEvent) => {
       event.preventDefault();
       const reactFlowBounds = event.currentTarget.getBoundingClientRect();
-      const stepType = event.dataTransfer.getData('application/reactflow') as WorkflowStepType;
+      const componentData = event.dataTransfer.getData('application/reactflow');
 
-      if (!stepType) return;
+      if (!componentData) return;
+
+      let component: ComponentLibraryItem;
+      try {
+        component = JSON.parse(componentData);
+      } catch {
+        return;
+      }
 
       const position = {
-        x: event.clientX - reactFlowBounds.left,
-        y: event.clientY - reactFlowBounds.top,
+        x: event.clientX - reactFlowBounds.left - 75,
+        y: event.clientY - reactFlowBounds.top - 40,
       };
 
       const newNode: EnhancedWorkflowNode = {
-        id: `${stepType}-${Date.now()}`,
+        id: `${component.id}-${Date.now()}`,
         type: 'workflowNode',
         position,
         data: {
-          label: stepType.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()),
-          stepType,
-          description: `${stepType} workflow step`,
-          pharmaceuticalType: 'custom',
-          complianceRequirements: []
+          label: component.defaultProperties.label || component.name,
+          stepType: component.id as WorkflowStepType,
+          description: component.description,
+          pharmaceuticalType: component.pharmaceuticalType,
+          complianceRequirements: component.complianceRequirements || [],
+          properties: { ...component.defaultProperties }
         },
         validation: {
           isValid: true,
@@ -301,7 +312,7 @@ export const EnhancedWorkflowBuilder = () => {
                 </TabsList>
                 
                 <TabsContent value="components" className="mt-4">
-                  <NodePalette onDragStart={onDragStart} />
+                  <ComponentLibrary onDragStart={onDragStart} />
                 </TabsContent>
                 
                 <TabsContent value="templates" className="mt-4">
