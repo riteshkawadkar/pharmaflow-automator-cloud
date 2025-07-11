@@ -16,6 +16,7 @@ export default function Requests() {
   const [showForm, setShowForm] = useState(false);
   const [requests, setRequests] = useState<any[]>([]);
   const [loadingRequests, setLoadingRequests] = useState(true);
+  const [workflowExecutions, setWorkflowExecutions] = useState<any[]>([]);
   const { createWorkflowTemplates, isCreating } = useWorkflowTemplates();
   const { workflowDefinitions } = useWorkflowDefinitions();
 
@@ -38,6 +39,18 @@ export default function Requests() {
 
       if (error) throw error;
       setRequests(data || []);
+
+      // Load workflow executions for progress tracking
+      const { data: executionsData, error: executionsError } = await supabase
+        .from('workflow_executions')
+        .select('*')
+        .in('request_id', (data || []).map(r => r.id));
+
+      if (executionsError) {
+        console.error('Error loading executions:', executionsError);
+      } else {
+        setWorkflowExecutions(executionsData || []);
+      }
     } catch (error) {
       console.error('Error loading requests:', error);
       toast({
@@ -115,6 +128,18 @@ export default function Requests() {
     }
     const workflow = workflowDefinitions.find(w => w.workflow_type === workflowType);
     return workflow?.name || workflowType;
+  };
+
+  const getWorkflowProgress = (requestId: string) => {
+    const execution = workflowExecutions.find(e => e.request_id === requestId);
+    if (!execution) return null;
+    
+    return {
+      status: execution.execution_status,
+      currentNode: execution.current_node_id,
+      startedAt: execution.started_at,
+      completedAt: execution.completed_at
+    };
   };
 
   return (
@@ -199,6 +224,17 @@ export default function Requests() {
                         <Badge variant="outline">
                           {getWorkflowTypeLabel(request.workflow_type)}
                         </Badge>
+                        {(() => {
+                          const progress = getWorkflowProgress(request.id);
+                          if (progress) {
+                            return (
+                              <Badge variant={progress.status === 'completed' ? 'default' : 'secondary'}>
+                                {progress.status === 'active' ? `In Progress (${progress.currentNode})` : progress.status}
+                              </Badge>
+                            );
+                          }
+                          return null;
+                        })()}
                       </div>
                     </div>
                   </div>
