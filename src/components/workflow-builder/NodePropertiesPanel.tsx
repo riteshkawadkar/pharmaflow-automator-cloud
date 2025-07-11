@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Node } from '@xyflow/react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -20,6 +20,11 @@ export const NodePropertiesPanel = ({ selectedNode, onUpdateNode }: NodeProperti
   const [config, setConfig] = useState<StepConfiguration>(
     selectedNode?.data?.configuration || {}
   );
+
+  // Update config when selectedNode changes
+  useEffect(() => {
+    setConfig(selectedNode?.data?.configuration || {});
+  }, [selectedNode?.id, selectedNode?.data?.configuration]);
 
   if (!selectedNode) {
     return (
