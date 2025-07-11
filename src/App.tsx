@@ -8,7 +8,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Requests from "./pages/Requests";
 import WorkflowManagement from "./pages/WorkflowManagement";
-import { EnhancedWorkflowBuilder } from "./pages/EnhancedWorkflowBuilder";
+import EnhancedWorkflowBuilder from "./pages/EnhancedWorkflowBuilder";
 import { ReactFlowProvider } from '@xyflow/react';
 import NotFound from "./pages/NotFound";
 

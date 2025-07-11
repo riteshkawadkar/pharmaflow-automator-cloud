@@ -626,3 +626,5 @@ export const EnhancedWorkflowBuilder = () => {
     </div>
   );
 };
+
+export default EnhancedWorkflowBuilder;
