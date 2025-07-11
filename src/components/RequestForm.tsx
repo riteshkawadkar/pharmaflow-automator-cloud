@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useWorkflowDefinitions } from "@/hooks/useWorkflowDefinitions";
 import { Database } from "@/integrations/supabase/types";
+import { WorkflowEngine } from "@/lib/workflow-engine";
 
 type WorkflowType = Database['public']['Enums']['workflow_type'];
 
@@ -173,6 +174,8 @@ export const RequestForm = ({ onSuccess, initialData, requestId }: RequestFormPr
         submitted_at: new Date().toISOString()
       };
 
+      let submittedRequestId = requestId;
+      
       if (requestId) {
         const { error } = await supabase
           .from('requests')
@@ -181,16 +184,35 @@ export const RequestForm = ({ onSuccess, initialData, requestId }: RequestFormPr
         
         if (error) throw error;
       } else {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('requests')
-          .insert([requestData]);
+          .insert([requestData])
+          .select('id')
+          .single();
         
         if (error) throw error;
+        submittedRequestId = data.id;
+      }
+      
+      // Start workflow execution
+      if (submittedRequestId) {
+        try {
+          await WorkflowEngine.startWorkflowExecution(submittedRequestId);
+          console.log('Workflow execution started for request:', submittedRequestId);
+        } catch (workflowError: any) {
+          console.error('Failed to start workflow execution:', workflowError);
+          // Don't fail the entire request submission if workflow fails
+          toast({
+            title: "Request submitted with warning",
+            description: "Your request was submitted but workflow automation may not be working properly.",
+            variant: "destructive",
+          });
+        }
       }
       
       toast({
         title: "Workflow request submitted",
-        description: "Your workflow request has been submitted for review.",
+        description: "Your workflow request has been submitted and workflow automation has started.",
       });
       
       navigate('/requests');

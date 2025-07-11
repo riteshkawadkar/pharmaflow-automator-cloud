@@ -176,6 +176,101 @@ export type Database = {
         }
         Relationships: []
       }
+      workflow_executions: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          current_node_id: string
+          execution_data: Json
+          execution_status: string
+          id: string
+          request_id: string
+          started_at: string
+          updated_at: string
+          workflow_definition_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          current_node_id: string
+          execution_data?: Json
+          execution_status?: string
+          id?: string
+          request_id: string
+          started_at?: string
+          updated_at?: string
+          workflow_definition_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          current_node_id?: string
+          execution_data?: Json
+          execution_status?: string
+          id?: string
+          request_id?: string
+          started_at?: string
+          updated_at?: string
+          workflow_definition_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflow_executions_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workflow_notifications: {
+        Row: {
+          content: string
+          created_at: string
+          email_provider_id: string | null
+          error_message: string | null
+          id: string
+          node_id: string
+          notification_type: string
+          recipients: string[]
+          request_id: string
+          sent_at: string | null
+          status: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          email_provider_id?: string | null
+          error_message?: string | null
+          id?: string
+          node_id: string
+          notification_type: string
+          recipients: string[]
+          request_id: string
+          sent_at?: string | null
+          status?: string
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          email_provider_id?: string | null
+          error_message?: string | null
+          id?: string
+          node_id?: string
+          notification_type?: string
+          recipients?: string[]
+          request_id?: string
+          sent_at?: string | null
+          status?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       workflow_steps: {
         Row: {
           configuration: Json
