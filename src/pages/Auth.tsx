@@ -144,6 +144,108 @@ export default function Auth() {
     }
   };
 
+  const createDemoUsers = async () => {
+    setLoading(true);
+    let successCount = 0;
+    
+    try {
+      const demoUsersData = [
+        { 
+          email: "admin@pharmaflow.com", 
+          password: "password123",
+          firstName: "John",
+          lastName: "Admin",
+          companyName: "PharmaFlow Corp",
+          department: "IT Administration",
+          role: "admin" as const
+        },
+        { 
+          email: "approver@pharmaflow.com", 
+          password: "password123",
+          firstName: "Sarah",
+          lastName: "Approver",
+          companyName: "PharmaFlow Corp",
+          department: "Regulatory Affairs",
+          role: "approver" as const
+        },
+        { 
+          email: "requester@pharmaflow.com", 
+          password: "password123",
+          firstName: "Mike",
+          lastName: "Requester",
+          companyName: "PharmaFlow Corp",
+          department: "Research & Development",
+          role: "requester" as const
+        }
+      ];
+
+      for (const user of demoUsersData) {
+        try {
+          // Sign up each user
+          const { data, error } = await supabase.auth.signUp({
+            email: user.email,
+            password: user.password,
+            options: {
+              data: {
+                first_name: user.firstName,
+                last_name: user.lastName,
+                company_name: user.companyName,
+                department: user.department,
+              }
+            }
+          });
+
+          if (error) {
+            console.error(`Error creating user ${user.email}:`, error);
+            continue;
+          }
+
+          if (data.user) {
+            // Update role if not default requester
+            if (user.role !== 'requester') {
+              // First delete the default role
+              await supabase
+                .from('user_roles')
+                .delete()
+                .eq('user_id', data.user.id);
+
+              // Then insert the correct role
+              await supabase
+                .from('user_roles')
+                .insert({
+                  user_id: data.user.id,
+                  role: user.role
+                });
+            }
+            
+            successCount++;
+          }
+        } catch (userError) {
+          console.error(`Failed to create user ${user.email}:`, userError);
+        }
+      }
+
+      if (successCount > 0) {
+        toast({
+          title: "Demo users created!",
+          description: `Successfully created ${successCount} demo users. You can now log in with any of them.`,
+        });
+      } else {
+        toast({
+          title: "Users might already exist",
+          description: "Try logging in with the demo credentials below.",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Try logging in with existing demo users below.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-subtle flex items-center justify-center p-4">
       <div className="w-full max-w-md">
@@ -201,6 +303,22 @@ export default function Auth() {
 
                 {/* Demo Users */}
                 <div className="mt-6 pt-6 border-t border-border">
+                  <div className="mb-4">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      onClick={createDemoUsers}
+                      disabled={loading}
+                    >
+                      {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Create Demo Users
+                    </Button>
+                    <p className="text-xs text-muted-foreground mt-2 text-center">
+                      Click this first if demo users don't exist yet
+                    </p>
+                  </div>
+                  
                   <p className="text-sm text-muted-foreground mb-3 text-center">Quick Demo Access:</p>
                   <div className="space-y-2">
                     {demoUsers.map((user) => (
