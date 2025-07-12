@@ -6,7 +6,7 @@ import { Plus, Edit, Trash2, Eye, Download, Copy } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { WorkflowBuilderWrapper } from "@/components/workflow-builder/WorkflowBuilder";
+import { WorkflowBuilderWrapper } from "@/components/WorkflowBuilder/WorkflowBuilderWrapper";
 import { WorkflowDefinition } from "@/types/workflow-builder";
 import { WORKFLOW_CONFIGS } from "@/types/workflows";
 

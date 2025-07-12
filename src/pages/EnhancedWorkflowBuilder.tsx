@@ -22,10 +22,10 @@ import {
   Node,
   useReactFlow 
 } from '@xyflow/react';
-import { WorkflowBuilderWrapper } from '@/components/workflow-builder/WorkflowBuilder';
-import { ComponentLibrary, ComponentLibraryItem, componentLibrary } from '@/components/workflow-builder/ComponentLibrary';
-import { WorkflowNodeComponent } from '@/components/workflow-builder/WorkflowNodeComponent';
-import { ValidationEngine } from '@/components/workflow-builder/ValidationEngine';
+import { WorkflowBuilderWrapper } from '@/components/WorkflowBuilder/WorkflowBuilderWrapper';
+import { ComponentLibrary, ComponentLibraryItem, componentLibrary } from '@/components/WorkflowBuilder/ComponentLibrary';
+import { WorkflowNodeComponent } from '@/components/WorkflowBuilder/WorkflowNodeComponent';
+import { ValidationEngine } from '@/components/WorkflowBuilder/ValidationEngine';
 import { WorkflowStepType } from '@/types/workflow-builder';
 import { Play, Save, Share, Download, Upload, Settings, Users, FileCheck, Trash2, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
 
@@ -250,7 +250,7 @@ export const EnhancedWorkflowBuilder = () => {
           pharmaceuticalType: component.pharmaceuticalType,
           complianceRequirements: component.complianceRequirements || [],
           properties: { ...component.defaultProperties },
-          gxpCritical: component.gxpCritical,
+          gxpCritical: false,
           estimatedDuration: component.estimatedDuration
         },
         validation: {
@@ -364,13 +364,22 @@ export const EnhancedWorkflowBuilder = () => {
                       <ValidationEngine
                         nodes={nodes.map(node => ({
                           id: node.id,
-                          type: (node as EnhancedWorkflowNode).data.type || 'form',
-                          data: (node as EnhancedWorkflowNode).data
+                          type: ((node as EnhancedWorkflowNode).data.type || 'form') as any,
+                          position: node.position,
+                          data: {
+                            label: (node as EnhancedWorkflowNode).data.label,
+                            description: (node as EnhancedWorkflowNode).data.description,
+                            properties: (node as EnhancedWorkflowNode).data.properties || {},
+                            pharmaceuticalType: (node as EnhancedWorkflowNode).data.pharmaceuticalType as any,
+                            complianceRequirements: (node as EnhancedWorkflowNode).data.complianceRequirements || []
+                          },
+                          connections: []
                         }))}
                         connections={edges.map(edge => ({
                           id: edge.id || `${edge.source}-${edge.target}`,
                           sourceNodeId: edge.source,
-                          targetNodeId: edge.target
+                          targetNodeId: edge.target,
+                          type: 'sequence' as any
                         }))}
                         onValidationUpdate={(nodeId, validation) => {
                           setNodes((nds) => 

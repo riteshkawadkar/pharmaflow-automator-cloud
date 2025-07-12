@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { ComponentLibraryItem, ComponentCategory } from '../../types/workflow';
+
+export type { ComponentLibraryItem };
 import {
   Play,
   Square,
@@ -46,7 +48,7 @@ const iconMap = {
   compliance_checker: AlertTriangle
 };
 
-const componentLibrary: ComponentLibraryItem[] = [
+export const componentLibrary: ComponentLibraryItem[] = [
   // Process Nodes
   {
     id: 'start',
